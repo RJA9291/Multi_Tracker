@@ -1,0 +1,2 @@
+# Keep shell scripts LF so the bash hooks run correctly on any checkout.
+*.sh text eol=lf
