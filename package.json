@@ -1,0 +1,9 @@
+{
+  "name": "multi-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static PWA. This file exists only so Laravel Forge's default deploy script (npm ci / npm run build) succeeds; there is no Node build — the app is plain HTML/CSS/JS in public/.",
+  "scripts": {
+    "build": "echo \"Multi Tracker is a static site — no build step.\""
+  }
+}

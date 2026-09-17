@@ -1,0 +1,6 @@
+<?php
+// Static-site placeholder. This project is NOT Laravel — there is no framework to
+// boot. Laravel Forge's default deploy script runs `php artisan optimize`,
+// `storage:link`, and `migrate --force`; this stub accepts any artisan command and
+// exits 0 so the zero-downtime deploy completes. Real hosting is plain HTML in public/.
+exit(0);

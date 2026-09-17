@@ -1,3 +1,5 @@
 # Composer deps are installed on the Forge server, never committed.
 /vendor/
 composer.lock
+# Node has no real deps here; never commit an install tree.
+/node_modules/
