@@ -1,9 +1,8 @@
 /* Multi Tracker service worker.
    Bump CACHE on every ship so returning visitors get fresh assets. */
-const CACHE = "multi-tracker-v3";
+const CACHE = "multi-tracker-v4";
 const ASSETS = [
   "./",
-  "./index.html",
   "./manifest.webmanifest",
   "./icon.svg",
   "./icon-180.png",
@@ -27,6 +26,8 @@ self.addEventListener("activate", (e) => {
 self.addEventListener("fetch", (e) => {
   const req = e.request;
   if (req.method !== "GET") return;
+  // Never cache the API — it must always hit the network for live sync.
+  try { if (new URL(req.url).pathname.startsWith("/api")) return; } catch (_) {}
   const isNav = req.mode === "navigate";
   if (isNav) {
     // Network-first for navigations so updates show; fall back to cache offline.
@@ -34,10 +35,10 @@ self.addEventListener("fetch", (e) => {
       fetch(req)
         .then((res) => {
           const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put("./index.html", copy)).catch(() => {});
+          caches.open(CACHE).then((c) => c.put("./", copy)).catch(() => {});
           return res;
         })
-        .catch(() => caches.match("./index.html").then((r) => r || caches.match("./")))
+        .catch(() => caches.match("./"))
     );
     return;
   }

@@ -334,6 +334,13 @@
     color:var(--muted);font-family:var(--font-body);font-weight:600;font-size:13px;cursor:pointer}
   .sheet.tall{max-height:88vh;overflow-y:auto}
 
+  /* ---- account / sync ---- */
+  .auth-err{color:var(--m1);font-size:13px;margin:-2px 0 10px;font-weight:500}
+  .acct{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:13px 14px;margin-bottom:6px}
+  .acct-em{font-family:var(--font-mono);font-weight:600;font-size:14px;word-break:break-all}
+  .acct-sub{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.4}
+  .btn.warn{color:var(--m1);border-color:var(--m1);background:transparent}
+
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -341,6 +348,7 @@
   <div class="topbar">
     <div class="brand"><span class="dot"></span><h1>Multi Tracker</h1></div>
     <div class="top-actions">
+      <button class="icon-btn" id="cloudBtn" aria-label="Account & sync">☁️</button>
       <button class="icon-btn" id="themeBtn" aria-label="Theme">🌓</button>
       <button class="icon-btn" id="menuBtn" aria-label="Menu">⋯</button>
     </div>
@@ -438,7 +446,7 @@
     <div id="taskLists"></div>
   </div><!-- /panel-work -->
 
-  <div class="foot" id="foot">Multi Tracker · v3</div>
+  <div class="foot" id="foot">Multi Tracker · v4</div>
 </div>
 
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
@@ -490,7 +498,7 @@
     }catch(e){}
     return {version:1,habits:DEFAULT_HABITS.map(function(h){return{id:h.id,name:h.name,emoji:h.emoji};}),months:{},tasks:[]};
   }
-  function save(){ try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){} }
+  function save(){ state.updated=Date.now(); try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){} scheduleSync(); }
 
   function pad(n){return n<10?"0"+n:""+n;}
   function monthKey(d){return d.getFullYear()+"-"+pad(d.getMonth()+1);}
@@ -911,7 +919,7 @@
       '<button class="menu-item" id="miImport"><span class="mi">⬆️</span>Import backup</button>'+
       '<button class="menu-item" id="miReset"><span class="mi">♻️</span>Reset this month</button>'+
       '<div class="actions"><button class="btn" id="miClose">Close</button></div>'+
-      '<div class="ver">v3 · data saved on this device</div>'
+      '<div class="ver">v4 · sign in (☁️) to sync across devices</div>'
     );
     document.getElementById("miClose").onclick=closeSheet;
     document.getElementById("miExport").onclick=function(){
@@ -937,8 +945,132 @@
     };
   }
 
+  /* ---------- cloud sync (Laravel API) ---------- */
+  var API_BASE=location.origin+"/api";
+  var AUTHKEY="multiTracker.auth";
+  var syncing=false, syncErr=false, syncTimer=null;
+  function getAuth(){ try{return JSON.parse(localStorage.getItem(AUTHKEY)||"null");}catch(e){return null;} }
+  function setAuth(a){ try{localStorage.setItem(AUTHKEY,JSON.stringify(a));}catch(e){} }
+  function clearAuth(){ try{localStorage.removeItem(AUTHKEY);}catch(e){} }
+
+  function api(path,method,body){
+    var a=getAuth(), h={"Accept":"application/json"};
+    if(body)h["Content-Type"]="application/json";
+    if(a&&a.token)h["Authorization"]="Bearer "+a.token;
+    return fetch(API_BASE+path,{method:method||"GET",headers:h,body:body?JSON.stringify(body):undefined})
+      .then(function(r){ return r.json().catch(function(){return {};}).then(function(j){
+        if(!r.ok){ var e=new Error(j.message||("HTTP "+r.status)); e.status=r.status; e.data=j; throw e; } return j; }); });
+  }
+
+  function cloudIcon(){ var a=getAuth(); if(!a)return "☁️"; if(syncing)return "🔄"; if(syncErr)return "⚠️"; return "✅"; }
+  function updateCloudUI(){ var b=document.getElementById("cloudBtn"); if(!b)return; var a=getAuth();
+    b.textContent=cloudIcon(); b.setAttribute("aria-label", a?("Synced as "+a.user.email):"Sign in to sync"); }
+
+  function scheduleSync(){ if(!getAuth())return; if(syncTimer)clearTimeout(syncTimer); syncTimer=setTimeout(pushState,1200); }
+
+  function pushState(){ if(!getAuth())return Promise.resolve();
+    syncing=true;syncErr=false;updateCloudUI();
+    return api("/state","PUT",{data:state}).then(function(){ syncing=false;updateCloudUI(); })
+      .catch(function(e){ syncing=false; if(e.status===401){clearAuth();} else syncErr=true; updateCloudUI(); }); }
+
+  function pullState(){ if(!getAuth())return Promise.resolve();
+    syncing=true;syncErr=false;updateCloudUI();
+    return api("/state","GET").then(function(res){ syncing=false;
+      var rd=res&&res.data; var ru=rd&&rd.updated||0, lu=state.updated||0;
+      if(rd&&ru>lu){ adoptRemote(rd); }
+      else if(lu>ru){ pushState(); }
+      updateCloudUI();
+    }).catch(function(e){ syncing=false; if(e.status===401){clearAuth();} else syncErr=true; updateCloudUI(); }); }
+
+  function reRender(){ renderAll(); if(!document.getElementById("panel-work").hidden) renderWork(); }
+  function adoptRemote(data){
+    if(data.habits)state.habits=data.habits; state.months=data.months||{}; state.tasks=data.tasks||[];
+    state.updated=data.updated||Date.now();
+    try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){} reRender();
+  }
+
+  function mergeInto(remote){
+    var seen={},merged=[];
+    (state.habits||[]).forEach(function(h){merged.push(h);seen[h.id]=1;});
+    (remote.habits||[]).forEach(function(h){if(!seen[h.id])merged.push(h);}); state.habits=merged;
+    var tseen={},mt=[];
+    (state.tasks||[]).forEach(function(t){mt.push(t);tseen[t.id]=1;});
+    (remote.tasks||[]).forEach(function(t){if(!tseen[t.id])mt.push(t);}); state.tasks=mt;
+    var rm=remote.months||{}; state.months=state.months||{};
+    Object.keys(rm).forEach(function(k){
+      if(!state.months[k]){state.months[k]=rm[k];return;}
+      var lm=state.months[k], rmm=rm[k];
+      ["habits","mood","sleep"].forEach(function(sec){ lm[sec]=lm[sec]||{}; var rs=rmm[sec]||{};
+        Object.keys(rs).forEach(function(id){
+          if(sec==="habits"){ lm.habits[id]=Object.assign({},rs[id],lm.habits[id]||{}); }
+          else if(lm[sec][id]==null){ lm[sec][id]=rs[id]; }
+        }); });
+    });
+    state.updated=Date.now(); try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}
+  }
+
+  function firstSync(){ syncing=true;updateCloudUI();
+    return api("/state","GET").then(function(res){
+      if(res&&res.data){ mergeInto(res.data); } else { state.updated=state.updated||Date.now(); }
+      return pushState();
+    }).then(function(){ syncing=false;updateCloudUI(); reRender(); })
+      .catch(function(e){ syncing=false;syncErr=true;updateCloudUI(); }); }
+
+  function openAccount(){
+    var a=getAuth();
+    if(a){
+      showSheet('<h3>Cloud sync</h3>'+
+        '<div class="acct"><div class="acct-em">✅ '+esc(a.user.email)+'</div>'+
+        '<div class="acct-sub">Data kau (habit + task) sync ke server bila kau ubah, dan turun automatik ke peranti lain yang login akaun ni.</div></div>'+
+        '<div class="actions"><button class="btn" id="acSync">Sync now</button><button class="btn warn" id="acOut">Sign out</button></div>'+
+        '<div class="actions"><button class="btn" id="acClose">Close</button></div>');
+      document.getElementById("acSync").onclick=function(){ pullState().then(pushState); };
+      document.getElementById("acOut").onclick=function(){ clearAuth(); updateCloudUI(); closeSheet(); };
+      document.getElementById("acClose").onclick=closeSheet;
+    } else { renderAuthForm("login",""); }
+  }
+
+  function renderAuthForm(mode,err){
+    var login=mode==="login";
+    showSheet('<h3>'+(login?"Sign in":"Create account")+'</h3>'+
+      '<div class="seg" id="authTabs" style="margin-bottom:14px"><button data-m="login" class="'+(login?"sel":"")+'">Sign in</button><button data-m="register" class="'+(!login?"sel":"")+'">Sign up</button></div>'+
+      (login?"":'<div class="field"><label>Name (optional)</label><input id="auName" type="text" maxlength="60" placeholder="Nama kau"></div>')+
+      '<div class="field"><label>Email</label><input id="auEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@email.com"></div>'+
+      '<div class="field"><label>Password</label><input id="auPass" type="password" autocomplete="'+(login?"current-password":"new-password")+'" placeholder="min 6 aksara"></div>'+
+      (err?'<div class="auth-err">'+esc(err)+'</div>':'')+
+      '<div class="actions"><button class="btn" id="auCancel">Cancel</button><button class="btn primary" id="auGo">'+(login?"Sign in":"Sign up")+'</button></div>'+
+      '<div class="ver">Data disimpan atas server kau (Forge) &middot; sync merentas peranti.</div>');
+    document.getElementById("authTabs").addEventListener("click",function(e){var b=e.target.closest("[data-m]");if(!b)return;renderAuthForm(b.dataset.m,"");});
+    document.getElementById("auCancel").onclick=closeSheet;
+    document.getElementById("auGo").onclick=function(){
+      var email=(document.getElementById("auEmail").value||"").trim().toLowerCase();
+      var pass=document.getElementById("auPass").value||"";
+      var nameEl=document.getElementById("auName"); var name=nameEl?nameEl.value.trim():null;
+      if(!email||!pass){ renderAuthForm(mode,"Isi email dan password."); return; }
+      if(!login&&pass.length<6){ renderAuthForm(mode,"Password sekurang-kurangnya 6 aksara."); return; }
+      var go=document.getElementById("auGo"); go.disabled=true; go.textContent="…";
+      var body=login?{email:email,password:pass}:{email:email,password:pass,name:name};
+      api(login?"/login":"/register","POST",body).then(function(res){
+        setAuth({token:res.token,user:res.user}); closeSheet(); updateCloudUI(); firstSync();
+      }).catch(function(e){
+        var msg;
+        if(!e.status){ msg="Tak dapat sambung ke server. Pastikan kau buka app di alamat on-forge.com kau (bukan artifact)."; }
+        else if(e.data&&e.data.errors){ msg=Object.keys(e.data.errors).map(function(k){return e.data.errors[k][0];}).join(" "); }
+        else { msg=e.message||"Gagal. Cuba lagi."; }
+        renderAuthForm(mode,msg);
+      });
+    };
+    setTimeout(function(){var f=document.getElementById("auEmail");if(f)f.focus();},50);
+  }
+
+  document.getElementById("cloudBtn").onclick=openAccount;
+
   renderAll();
+  updateCloudUI();
   var lastTab=null; try{lastTab=localStorage.getItem(TABKEY);}catch(e){}
   if(lastTab==="work") switchTab("work"); else setTimeout(scrollToToday,60);
+  if(getAuth()) pullState();
+  document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="visible"&&getAuth()&&!syncing) pullState(); });
+  setInterval(function(){ if(getAuth()&&document.visibilityState==="visible"&&!syncing) pullState(); },30000);
 })();
 </script>
