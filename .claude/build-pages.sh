@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Wrap the self-contained app fragment (SRC) into a standalone PWA index.html.
-# SRC stays the single source of truth (also publishable as a claude.ai Artifact).
+# Wrap the self-contained app fragment (SRC) into a standalone PWA page and place it at
+# public/shell.html — served by Laravel's web route. Laravel owns public/index.php, so we
+# must NOT emit public/index.html (nginx would serve it before Laravel).
 set -uo pipefail
 root="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
 cd "$root" || exit 0
@@ -14,6 +15,7 @@ BG_LIGHT="#F4F4F1"
 BG_DARK="#111311"
 # ----------------------------------------
 [ -f "$SRC" ] || exit 0
+mkdir -p public
 
 {
 cat <<HEAD
@@ -62,12 +64,9 @@ if ('serviceWorker' in navigator) {
 </body>
 </html>
 TAIL
-} > index.html
+} > public/shell.html
 
-# Mirror the built site into public/ so Laravel Forge (web root = /public) serves it,
-# while index.html + assets at repo root keep GitHub Pages working. Both stay in sync here.
-mkdir -p public
-cp -f index.html public/index.html
+# Keep the PWA static assets alongside the shell in public/.
 for f in manifest.webmanifest sw.js icon.svg icon-180.png icon-192.png icon-512.png; do
   [ -f "$f" ] && cp -f "$f" "public/$f"
 done

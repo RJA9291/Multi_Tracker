@@ -1,5 +1,23 @@
-# Composer deps are installed on the Forge server, never committed.
 /vendor/
-composer.lock
-# Node has no real deps here; never commit an install tree.
 /node_modules/
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+.env
+.env.backup
+.env.production
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+auth.json
+npm-debug.log
+yarn-error.log
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed
+composer.lock
+.DS_Store
