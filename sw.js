@@ -1,6 +1,6 @@
 /* Multi Tracker service worker.
    Bump CACHE on every ship so returning visitors get fresh assets. */
-const CACHE = "multi-tracker-v1";
+const CACHE = "multi-tracker-v2";
 const ASSETS = [
   "./",
   "./index.html",
