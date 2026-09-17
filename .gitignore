@@ -1,0 +1,3 @@
+# Composer deps are installed on the Forge server, never committed.
+/vendor/
+composer.lock

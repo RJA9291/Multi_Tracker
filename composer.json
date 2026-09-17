@@ -1,0 +1,9 @@
+{
+  "name": "rja9291/multi-tracker",
+  "description": "Multi Tracker — a static PWA (no PHP dependencies). This file exists only so Laravel Forge's default deploy script (composer install) succeeds; the app itself is plain HTML/CSS/JS served from public/.",
+  "license": "MIT",
+  "require": {},
+  "config": {
+    "optimize-autoloader": true
+  }
+}

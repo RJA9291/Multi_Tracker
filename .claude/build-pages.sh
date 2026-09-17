@@ -63,3 +63,11 @@ if ('serviceWorker' in navigator) {
 </html>
 TAIL
 } > index.html
+
+# Mirror the built site into public/ so Laravel Forge (web root = /public) serves it,
+# while index.html + assets at repo root keep GitHub Pages working. Both stay in sync here.
+mkdir -p public
+cp -f index.html public/index.html
+for f in manifest.webmanifest sw.js icon.svg icon-180.png icon-192.png icon-512.png; do
+  [ -f "$f" ] && cp -f "$f" "public/$f"
+done
