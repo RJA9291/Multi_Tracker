@@ -4,14 +4,18 @@ use Illuminate\Support\Str;
 
 return [
 
-    'default' => env('DB_CONNECTION', 'mysql'),
+    // Forced to sqlite: no DB user/password needed, and the file lives in Forge's
+    // shared storage so it persists across zero-downtime deploys. (Ignores DB_* in .env.)
+    'default' => 'sqlite',
 
     'connections' => [
 
         'sqlite' => [
             'driver' => 'sqlite',
             'url' => env('DB_URL'),
-            'database' => env('DB_DATABASE', database_path('database.sqlite')),
+            // Absolute path in the site's SHARED storage (symlinked by Forge), so data
+            // survives every deploy. Hardcoded (not DB_DATABASE, which may hold a MySQL name).
+            'database' => storage_path('app/database.sqlite'),
             'prefix' => '',
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
             'busy_timeout' => null,
