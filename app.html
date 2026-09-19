@@ -322,6 +322,11 @@
   .field textarea:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
   .sublist{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
   .subrow{display:flex;align-items:center;gap:9px}
+  .subrow .sdrag{flex:none;width:22px;height:30px;display:grid;place-items:center;cursor:grab;
+    color:var(--faint);font-size:15px;background:none;border:none;touch-action:none;line-height:1;padding:0}
+  .subrow .sdrag:active{cursor:grabbing}
+  .subrow.dragging{opacity:.55}
+  .subrow.dragging .sdrag{color:var(--accent)}
   .subrow .sck{width:20px;height:20px;border-radius:6px;border:2px solid var(--line-strong);background:var(--surface-2);
     flex:none;cursor:pointer;display:grid;place-items:center;padding:0}
   .subrow .sck.on{background:var(--accent);border-color:var(--accent)}
@@ -446,7 +451,7 @@
     <div id="taskLists"></div>
   </div><!-- /panel-work -->
 
-  <div class="foot" id="foot">Multi Tracker · v4</div>
+  <div class="foot" id="foot">Multi Tracker · v5</div>
 </div>
 
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
@@ -778,7 +783,8 @@
     document.getElementById("tPrio").addEventListener("click",function(e){var b=e.target.closest("[data-v]");if(!b)return;prio=b.dataset.v||null;[].forEach.call(this.children,function(c){c.classList.remove("sel");});b.classList.add("sel");});
     function drawSubs(){
       document.getElementById("subList").innerHTML=work.subtasks.map(function(s,i){
-        return '<div class="subrow'+(s.done?" done":"")+'"><button class="sck'+(s.done?" on":"")+'" data-si="'+i+'" aria-label="Toggle"></button>'+
+        return '<div class="subrow'+(s.done?" done":"")+'"><button class="sdrag" data-sg="'+i+'" aria-label="Drag to reorder" title="Drag to reorder">⠿</button>'+
+          '<button class="sck'+(s.done?" on":"")+'" data-si="'+i+'" aria-label="Toggle"></button>'+
           '<input type="text" data-sx="'+i+'" value="'+esc(s.text)+'" placeholder="Subtask"><button class="del" data-sd="'+i+'" aria-label="Remove">✕</button></div>';
       }).join("");
     }
@@ -790,6 +796,32 @@
     document.getElementById("subList").addEventListener("input",function(e){
       var inp=e.target.closest("[data-sx]"); if(inp){ work.subtasks[+inp.dataset.sx].text=inp.value; }
     });
+    // Drag subtasks to reorder (pointer events = touch + mouse).
+    (function(){
+      var subList=document.getElementById("subList"), dragI=-1;
+      function onMove(e){
+        if(dragI<0)return;
+        var rows=[].slice.call(subList.querySelectorAll(".subrow")); if(!rows.length)return;
+        var y=e.clientY, over=rows.length;
+        for(var j=0;j<rows.length;j++){ var r=rows[j].getBoundingClientRect(); if(y<r.top+r.height/2){ over=j; break; } }
+        var target=over; if(target>dragI)target--;
+        target=Math.max(0,Math.min(work.subtasks.length-1,target));
+        if(target!==dragI){
+          var item=work.subtasks.splice(dragI,1)[0]; work.subtasks.splice(target,0,item); dragI=target;
+          drawSubs(); var nr=subList.querySelectorAll(".subrow")[dragI]; if(nr)nr.classList.add("dragging");
+        }
+        if(e.cancelable)e.preventDefault();
+      }
+      function onUp(){ dragI=-1; drawSubs();
+        document.removeEventListener("pointermove",onMove); document.removeEventListener("pointerup",onUp); }
+      subList.addEventListener("pointerdown",function(e){
+        var h=e.target.closest("[data-sg]"); if(!h)return;
+        dragI=+h.dataset.sg; var row=h.closest(".subrow"); if(row)row.classList.add("dragging");
+        document.addEventListener("pointermove",onMove,{passive:false});
+        document.addEventListener("pointerup",onUp);
+        e.preventDefault();
+      });
+    })();
     document.getElementById("subAdd").onclick=function(){ work.subtasks.push({id:"s"+Date.now(),text:"",done:false}); drawSubs();
       var ins=document.querySelectorAll('#subList input'); if(ins.length)ins[ins.length-1].focus(); };
     document.getElementById("tCancel").onclick=closeSheet;
@@ -919,7 +951,7 @@
       '<button class="menu-item" id="miImport"><span class="mi">⬆️</span>Import backup</button>'+
       '<button class="menu-item" id="miReset"><span class="mi">♻️</span>Reset this month</button>'+
       '<div class="actions"><button class="btn" id="miClose">Close</button></div>'+
-      '<div class="ver">v4 · sign in (☁️) to sync across devices</div>'
+      '<div class="ver">v5 · sign in (☁️) to sync across devices</div>'
     );
     document.getElementById("miClose").onclick=closeSheet;
     document.getElementById("miExport").onclick=function(){
