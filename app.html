@@ -518,7 +518,7 @@
     <div class="selbar" id="selBar" hidden></div>
   </div><!-- /panel-work -->
 
-  <div class="foot" id="foot">Multi Tracker · v15</div>
+  <div class="foot" id="foot">Multi Tracker · v16</div>
 </div>
 
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
@@ -929,7 +929,9 @@
       function advance(t){return cardH(t)+12;}
       var statuses=STATUS.filter(function(st){return tasks.some(function(t){return t.status===st[0];});});
       var secSum=0; statuses.forEach(function(st){var sh=0; tasks.forEach(function(t){if(t.status===st[0])sh+=advance(t);}); secSum+=secHeadH+sh+secGap;});
-      var base=386; var yEnd=total?(base+secSum):(base+70); var H=Math.round(yEnd+72);
+      function taskPct(t){ if(t.subtasks&&t.subtasks.length){var d=t.subtasks.filter(function(s){return s.done;}).length; return Math.round(d/t.subtasks.length*100);} return t.status==="done"?100:t.status==="doing"?50:0; }
+      var chart=flt.type==="group"&&total, rowH=42, chartHeadH=42, chartH=chart?(chartHeadH+total*rowH+8):0;
+      var base=386+chartH; var yEnd=total?(base+secSum):(base+70); var H=Math.round(yEnd+72);
       var S=2, cv=document.createElement("canvas"); cv.width=W*S; cv.height=H*S;
       var x=cv.getContext("2d"); x.scale(S,S); x.textBaseline="alphabetic";
       x.fillStyle=P.bg; x.fillRect(0,0,W,H);
@@ -971,6 +973,21 @@
       x.fillStyle=P.ink; x.font='600 20px '+MONO; x.textAlign="right"; x.fillText(pct+"%   ·   "+c.done+"/"+total,W-pad,y+6); x.textAlign="left"; y+=20;
       var bh=12; x.fillStyle=P.line; rr(pad,y,cW,bh,6); x.fill(); x.fillStyle=P.accent; rr(pad,y,Math.max(bh,cW*pct/100),bh,6); x.fill(); y+=bh+30;
       if(!total){x.fillStyle=P.faint; x.font='500 24px '+BODY; x.textAlign="center"; x.fillText("Tiada task untuk laporan lagi.",W/2,y+30); x.textAlign="left";}
+      // task comparison bar chart (group report only)
+      if(chart){
+        x.fillStyle=P.ink; x.font='600 21px '+DISP; x.fillText("Task comparison",pad,y+6);
+        y+=chartHeadH;
+        var ct=tasks.slice().sort(function(a,b){return taskPct(b)-taskPct(a);});
+        var labelW=Math.min(300,Math.round(cW*0.36)), pctW=76, barX=pad+labelW+14, barW=cW-labelW-14-pctW-10;
+        x.textBaseline="middle";
+        ct.forEach(function(t){var p=taskPct(t),col=p<=30?P.over:p<=60?P.amber:P.accent,cy=y+rowH/2;
+          x.fillStyle=P.ink; x.font='500 19px '+BODY; x.textAlign="left"; x.fillText(trunc(t.title,labelW-4),pad,cy);
+          x.fillStyle=P.line; rr(barX,cy-7,barW,14,7); x.fill();
+          x.fillStyle=col; rr(barX,cy-7,Math.max(14,barW*p/100),14,7); x.fill();
+          x.textAlign="right"; x.fillStyle=col; x.font='700 18px '+MONO; x.fillText(p+"%",pad+cW,cy);
+          y+=rowH;});
+        x.textAlign="left"; x.textBaseline="alphabetic"; y+=8;
+      }
       // sections
       var sc={todo:P.faint,doing:P.amber,done:P.accent};
       statuses.forEach(function(st){
@@ -1271,7 +1288,7 @@
       '<button class="menu-item" id="miImport"><span class="mi">⬆️</span>Import backup</button>'+
       '<button class="menu-item" id="miReset"><span class="mi">♻️</span>Reset this month</button>'+
       '<div class="actions"><button class="btn" id="miClose">Close</button></div>'+
-      '<div class="ver">v15 · sign in (☁️) to sync across devices</div>'
+      '<div class="ver">v16 · sign in (☁️) to sync across devices</div>'
     );
     document.getElementById("miClose").onclick=closeSheet;
     document.getElementById("miExport").onclick=function(){
