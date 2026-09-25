@@ -503,7 +503,7 @@
     <div id="taskLists"></div>
   </div><!-- /panel-work -->
 
-  <div class="foot" id="foot">Multi Tracker · v10</div>
+  <div class="foot" id="foot">Multi Tracker · v11</div>
 </div>
 
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
@@ -903,11 +903,12 @@
       function trunc(t,m){if(x.measureText(t).width<=m)return t;while(t.length>1&&x.measureText(t+"…").width>m)t=t.slice(0,-1);return t+"…";}
       function pill(px,py,text,bg,fg){x.font='600 19px '+MONO;var padx=12,h=30,w=x.measureText(text).width+padx*2;x.fillStyle=bg;rr(px,py,w,h,15);x.fill();x.fillStyle=fg;x.textBaseline="middle";x.fillText(text,px+padx,py+h/2+1);x.textBaseline="alphabetic";return w;}
       function donut(cx,cy,r,thick,pct,label){
+        var col=pct<=30?P.over:pct<=60?P.amber:P.accent;
         x.beginPath(); x.arc(cx,cy,r,0,2*Math.PI); x.lineWidth=thick; x.strokeStyle=P.line; x.stroke();
-        if(pct>0){var a0=-Math.PI/2; x.beginPath(); x.arc(cx,cy,r,a0,a0+2*Math.PI*Math.min(pct,100)/100); x.lineWidth=thick; x.strokeStyle=pct>=100?P.accent:P.accent; x.lineCap="round"; x.stroke(); x.lineCap="butt";}
+        if(pct>0){var a0=-Math.PI/2; x.beginPath(); x.arc(cx,cy,r,a0,a0+2*Math.PI*Math.min(pct,100)/100); x.lineWidth=thick; x.strokeStyle=col; x.lineCap="round"; x.stroke(); x.lineCap="butt";}
         x.textAlign="center"; x.textBaseline="middle";
-        x.fillStyle=P.ink; x.font='600 18px '+MONO; x.fillText(pct+"%",cx,cy-4);
-        if(label){x.fillStyle=P.faint; x.font='500 12px '+MONO; x.fillText(label,cx,cy+13);}
+        x.fillStyle=col; x.font='700 '+Math.round(r*0.6)+'px '+MONO; x.fillText(pct+"%",cx,cy-Math.round(r*0.14));
+        if(label){x.fillStyle=P.faint; x.font='500 '+Math.round(r*0.32)+'px '+MONO; x.fillText(label,cx,cy+Math.round(r*0.42));}
         x.textAlign="left"; x.textBaseline="alphabetic";
       }
       var y=pad;
@@ -944,7 +945,7 @@
         x.fillStyle=P.faint; x.font='600 18px '+MONO; x.fillText(String(list.length),pad+22+x.measureText(lbl).width+14,y+20);
         y+=secHeadH;
         list.forEach(function(t){var ch=cardH(t);
-          var hasSub=subsOf(t).length>0, RC=hasSub?120:0;
+          var hasSub=subsOf(t).length>0, RC=hasSub?140:0;
           x.fillStyle=P.bg; rr(pad,y,cW,ch,16); x.fill(); x.strokeStyle=P.line; x.lineWidth=1; rr(pad,y,cW,ch,16); x.stroke();
           x.fillStyle=sc[st[0]]; rr(pad+1,y+10,5,ch-20,3); x.fill();
           x.fillStyle=P.ink; x.font='600 27px '+BODY; x.fillText(trunc(t.title,cW-44-RC),pad+22,y+34);
@@ -954,7 +955,7 @@
           if(t.project)mx+=pill(mx,my,"# "+t.project,P.accentSoft,P.accent)+8;
           if(!showSubs&&t.subtasks&&t.subtasks.length){var dn0=t.subtasks.filter(function(s){return s.done;}).length; mx+=pill(mx,my,dn0+"/"+t.subtasks.length+" sub",P.panel,P.mut)+8;}
           if(hasSub){var dn=t.subtasks.filter(function(s){return s.done;}).length, tot=t.subtasks.length;
-            donut(pad+cW-58,y+ch/2,30,8,Math.round(dn/tot*100),dn+"/"+tot);}
+            donut(pad+cW-66,y+ch/2,42,11,Math.round(dn/tot*100),dn+"/"+tot);}
           subsOf(t).forEach(function(s,i){var ly=y+subStart+i*subLH,bx=pad+24,by=ly-14,bs=16;
             if(s.done){x.fillStyle=P.accent; rr(bx,by,bs,bs,4); x.fill(); x.strokeStyle="#fff"; x.lineWidth=2; x.beginPath(); x.moveTo(bx+4,by+8); x.lineTo(bx+7,by+11); x.lineTo(bx+12,by+5); x.stroke();}
             else{x.strokeStyle=P.line; x.lineWidth=1.5; rr(bx,by,bs,bs,4); x.stroke();}
@@ -1193,7 +1194,7 @@
       '<button class="menu-item" id="miImport"><span class="mi">⬆️</span>Import backup</button>'+
       '<button class="menu-item" id="miReset"><span class="mi">♻️</span>Reset this month</button>'+
       '<div class="actions"><button class="btn" id="miClose">Close</button></div>'+
-      '<div class="ver">v10 · sign in (☁️) to sync across devices</div>'
+      '<div class="ver">v11 · sign in (☁️) to sync across devices</div>'
     );
     document.getElementById("miClose").onclick=closeSheet;
     document.getElementById("miExport").onclick=function(){
