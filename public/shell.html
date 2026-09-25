@@ -279,6 +279,8 @@
   /* ---- work task ---- */
   .work-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
   .work-sum{display:flex;gap:7px;flex-wrap:wrap}
+  .work-actions{display:flex;gap:6px;flex:none}
+  .report-img{width:100%;display:block;border:1px solid var(--line);border-radius:12px;margin-bottom:4px}
   .wpill{display:flex;align-items:baseline;gap:5px;background:var(--surface);border:1px solid var(--line);
     border-radius:999px;padding:5px 11px}
   .wpill b{font-family:var(--font-mono);font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
@@ -492,13 +494,16 @@
     <div class="reminders" id="reminders" hidden></div>
     <div class="work-top">
       <div class="work-sum" id="workSum"></div>
-      <button class="chip accent" id="addTask">＋ Task</button>
+      <div class="work-actions">
+        <button class="chip sq" id="exportBtn" aria-label="Export report" title="Export report">📤</button>
+        <button class="chip accent" id="addTask">＋ Task</button>
+      </div>
     </div>
     <div class="filters" id="taskFilters"></div>
     <div id="taskLists"></div>
   </div><!-- /panel-work -->
 
-  <div class="foot" id="foot">Multi Tracker · v6</div>
+  <div class="foot" id="foot">Multi Tracker · v7</div>
 </div>
 
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
@@ -845,6 +850,106 @@
       icon:"./icon-192.png", badge:"./icon-192.png"
     });
   }
+  /* ---------- export: professional report artwork (PNG) ---------- */
+  function openReport(){
+    showSheet('<h3>Work Task Report</h3><div id="rpWrap" style="min-height:120px;display:grid;place-items:center;color:var(--muted);font-size:14px">Menjana artwork…</div>'+
+      '<div class="actions" id="rpActions" hidden>'+
+        '<button class="btn" id="rpClose">Close</button>'+
+        '<button class="btn primary" id="rpDl">⬇ Download PNG</button></div>');
+    document.getElementById("rpClose")&&(document.getElementById("rpClose").onclick=closeSheet);
+    buildReportCanvas(function(cv){
+      var url=cv.toDataURL("image/png");
+      var wrap=document.getElementById("rpWrap"); if(!wrap)return;
+      wrap.innerHTML='<img class="report-img" alt="Work Task report" src="'+url+'">';
+      var canShare=!!(navigator.canShare&&navigator.share&&cv.toBlob);
+      var act=document.getElementById("rpActions"); act.hidden=false;
+      act.innerHTML='<button class="btn" id="rpClose">Close</button>'+
+        (canShare?'<button class="btn" id="rpShare">Share</button>':'')+
+        '<button class="btn primary" id="rpDl">⬇ Download</button>';
+      document.getElementById("rpClose").onclick=closeSheet;
+      document.getElementById("rpDl").onclick=function(){
+        var a=document.createElement("a"); a.href=url; a.download="work-task-report-"+todayStr()+".png";
+        document.body.appendChild(a); a.click(); a.remove();
+      };
+      if(canShare)document.getElementById("rpShare").onclick=function(){
+        cv.toBlob(function(b){ if(!b)return; var f=new File([b],"work-task-report.png",{type:"image/png"});
+          try{ if(navigator.canShare({files:[f]})) navigator.share({files:[f],title:"Work Task Report"}); }catch(e){} },"image/png");
+      };
+    });
+  }
+  function buildReportCanvas(cb){
+    function hexA(hex,a){var h=hex.replace("#","");return "rgba("+parseInt(h.slice(0,2),16)+","+parseInt(h.slice(2,4),16)+","+parseInt(h.slice(4,6),16)+","+a+")";}
+    function draw(){
+      var td=todayStr(), flt=taskFilter;
+      var tasks=state.tasks.filter(function(t){return flt==="all"||t.project===flt;});
+      var c={todo:0,doing:0,done:0,over:0};
+      tasks.forEach(function(t){c[t.status]=(c[t.status]||0)+1; if(t.status!=="done"&&t.due&&t.due<td)c.over++;});
+      var total=tasks.length, pct=total?Math.round(c.done/total*100):0;
+      var P={bg:"#FFFFFF",panel:"#F5F6F3",ink:"#181A18",mut:"#6B6E69",faint:"#9DA097",line:"#E6E6E1",
+        accent:"#17915A",accentSoft:"#E3F1EA",over:"#CF5546",amber:"#C7891A",hi:"#CF5546",med:"#E08A3C",low:"#7C8A82"};
+      var W=1080,pad=56,cW=W-pad*2,taskH=92,secHeadH=52,secGap=12;
+      var statuses=STATUS.filter(function(st){return tasks.some(function(t){return t.status===st[0];});});
+      var secSum=0; statuses.forEach(function(st){var n=tasks.filter(function(t){return t.status===st[0];}).length; secSum+=secHeadH+n*taskH+secGap;});
+      var base=386; var yEnd=total?(base+secSum):(base+70); var H=Math.round(yEnd+72);
+      var S=2, cv=document.createElement("canvas"); cv.width=W*S; cv.height=H*S;
+      var x=cv.getContext("2d"); x.scale(S,S); x.textBaseline="alphabetic";
+      x.fillStyle=P.bg; x.fillRect(0,0,W,H);
+      var DISP='"Bricolage Grotesque", system-ui, sans-serif', BODY='"IBM Plex Sans", system-ui, sans-serif', MONO='"IBM Plex Mono", ui-monospace, monospace';
+      function rr(px,py,w,h,r){x.beginPath(); if(x.roundRect)x.roundRect(px,py,w,h,r); else {x.moveTo(px+r,py);x.arcTo(px+w,py,px+w,py+h,r);x.arcTo(px+w,py+h,px,py+h,r);x.arcTo(px,py+h,px,py,r);x.arcTo(px,py,px+w,py,r);x.closePath();}}
+      function trunc(t,m){if(x.measureText(t).width<=m)return t;while(t.length>1&&x.measureText(t+"…").width>m)t=t.slice(0,-1);return t+"…";}
+      function pill(px,py,text,bg,fg){x.font='600 19px '+MONO;var padx=12,h=30,w=x.measureText(text).width+padx*2;x.fillStyle=bg;rr(px,py,w,h,15);x.fill();x.fillStyle=fg;x.textBaseline="middle";x.fillText(text,px+padx,py+h/2+1);x.textBaseline="alphabetic";return w;}
+      var y=pad;
+      // header
+      x.fillStyle=P.accent; rr(pad,y+2,6,72,3); x.fill();
+      x.fillStyle=P.accent; x.font='600 20px '+MONO; x.fillText("MULTI TRACKER",pad+22,y+20);
+      x.fillStyle=P.ink; x.font='700 46px '+DISP; x.fillText("Work Task Report",pad+22,y+62);
+      var M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],now=new Date();
+      var dstr=now.getDate()+" "+M[now.getMonth()]+" "+now.getFullYear();
+      x.fillStyle=P.mut; x.font='500 22px '+BODY; x.textAlign="right";
+      x.fillText(dstr+"   ·   "+(flt!=="all"?"# "+flt:"All projects"),W-pad,y+20); x.textAlign="left";
+      y+=110;
+      x.strokeStyle=P.line; x.lineWidth=1; x.beginPath(); x.moveTo(pad,y); x.lineTo(W-pad,y); x.stroke(); y+=34;
+      // stat tiles
+      var tiles=[["To Do",c.todo,P.ink],["In Progress",c.doing,P.amber],["Done",c.done,P.accent],["Overdue",c.over,P.over]];
+      var g=16,tw=(cW-g*3)/4,th=98;
+      tiles.forEach(function(t,i){var tx=pad+i*(tw+g);
+        x.fillStyle=P.panel; rr(tx,y,tw,th,16); x.fill(); x.strokeStyle=P.line; rr(tx,y,tw,th,16); x.stroke();
+        x.fillStyle=P.faint; x.font='600 15px '+MONO; x.fillText(t[0].toUpperCase(),tx+16,y+28);
+        x.fillStyle=t[2]; x.font='600 42px '+DISP; x.fillText(String(t[1]),tx+16,y+80);});
+      y+=th+28;
+      // progress
+      x.fillStyle=P.mut; x.font='600 20px '+BODY; x.fillText("Overall progress",pad,y+6);
+      x.fillStyle=P.ink; x.font='600 20px '+MONO; x.textAlign="right"; x.fillText(pct+"%   ·   "+c.done+"/"+total,W-pad,y+6); x.textAlign="left"; y+=20;
+      var bh=12; x.fillStyle=P.line; rr(pad,y,cW,bh,6); x.fill(); x.fillStyle=P.accent; rr(pad,y,Math.max(bh,cW*pct/100),bh,6); x.fill(); y+=bh+30;
+      if(!total){x.fillStyle=P.faint; x.font='500 24px '+BODY; x.textAlign="center"; x.fillText("Tiada task untuk laporan lagi.",W/2,y+30); x.textAlign="left";}
+      // sections
+      var sc={todo:P.faint,doing:P.amber,done:P.accent};
+      statuses.forEach(function(st){
+        var list=tasks.filter(function(t){return t.status===st[0];});
+        list.sort(function(a,b){var pa=a.priority?PRIO[a.priority].r:0,pb=b.priority?PRIO[b.priority].r:0; if(pb!==pa)return pb-pa; var da=a.due||"9999",db=b.due||"9999"; return da<db?-1:da>db?1:0;});
+        x.fillStyle=sc[st[0]]; x.beginPath(); x.arc(pad+6,y+13,6,0,7); x.fill();
+        x.fillStyle=P.ink; x.font='600 24px '+DISP; var lbl=st[1].toUpperCase(); x.fillText(lbl,pad+22,y+21);
+        x.fillStyle=P.faint; x.font='600 18px '+MONO; x.fillText(String(list.length),pad+22+x.measureText(lbl).width+14,y+20);
+        y+=secHeadH;
+        list.forEach(function(t){var ch=taskH-12;
+          x.fillStyle=P.bg; rr(pad,y,cW,ch,16); x.fill(); x.strokeStyle=P.line; x.lineWidth=1; rr(pad,y,cW,ch,16); x.stroke();
+          x.fillStyle=sc[st[0]]; rr(pad+1,y+10,5,ch-20,3); x.fill();
+          x.fillStyle=P.ink; x.font='600 27px '+BODY; x.fillText(trunc(t.title,cW-44),pad+22,y+34);
+          var mx=pad+22,my=y+48;
+          if(t.priority){var pc=t.priority==="high"?P.hi:t.priority==="med"?P.med:P.low; mx+=pill(mx,my,PRIO[t.priority].t.toUpperCase(),hexA(pc,0.14),pc)+8;}
+          if(t.due){var ov=t.status!=="done"&&t.due<td; mx+=pill(mx,my,fmtDue(t.due),ov?hexA(P.over,0.14):P.panel,ov?P.over:P.mut)+8;}
+          if(t.project)mx+=pill(mx,my,"# "+t.project,P.accentSoft,P.accent)+8;
+          if(t.subtasks&&t.subtasks.length){var dn=t.subtasks.filter(function(s){return s.done;}).length; mx+=pill(mx,my,dn+"/"+t.subtasks.length+" sub",P.panel,P.mut)+8;}
+          y+=taskH;});
+        y+=secGap;
+      });
+      x.strokeStyle=P.line; x.beginPath(); x.moveTo(pad,H-52); x.lineTo(W-pad,H-52); x.stroke();
+      x.fillStyle=P.faint; x.font='500 16px '+MONO; x.fillText("Generated "+dstr+"  ·  multi_tracker.on-forge.com",pad,H-28);
+      cb(cv);
+    }
+    if(document.fonts&&document.fonts.ready) document.fonts.ready.then(draw); else draw();
+  }
+
   function taskRow(t,td){
     var stcls=t.status==="done"?"done":t.status==="doing"?"doing":"", meta="";
     if(t.priority){var p=PRIO[t.priority];meta+='<span class="badge '+p.cls+'"><span class="pd" style="background:'+p.c+'"></span>'+p.t+'</span>';}
@@ -867,6 +972,7 @@
     var f=e.target.closest("[data-f]"); if(!f)return; taskFilter=f.dataset.f; renderWork();
   });
   document.getElementById("addTask").onclick=function(){ openTask(null); };
+  document.getElementById("exportBtn").onclick=openReport;
 
   function openTask(id){
     var t=id?findTask(id):null;
@@ -1065,7 +1171,7 @@
       '<button class="menu-item" id="miImport"><span class="mi">⬆️</span>Import backup</button>'+
       '<button class="menu-item" id="miReset"><span class="mi">♻️</span>Reset this month</button>'+
       '<div class="actions"><button class="btn" id="miClose">Close</button></div>'+
-      '<div class="ver">v6 · sign in (☁️) to sync across devices</div>'
+      '<div class="ver">v7 · sign in (☁️) to sync across devices</div>'
     );
     document.getElementById("miClose").onclick=closeSheet;
     document.getElementById("miExport").onclick=function(){
