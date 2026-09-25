@@ -294,6 +294,8 @@
     font-family:var(--font-body);font-weight:600;font-size:12px;padding:6px 12px;border-radius:999px;
     white-space:nowrap;cursor:pointer;flex:none}
   .fchip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .fchip.grp{border-color:var(--accent);color:var(--accent-ink)}
+  .fchip.grp[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
 
   .tsection{margin-bottom:14px}
   .tsection-h{display:flex;align-items:center;gap:8px;margin:0 4px 8px}
@@ -536,7 +538,7 @@
     <div class="selbar" id="selBar" hidden></div>
   </div><!-- /panel-work -->
 
-  <div class="foot" id="foot">Multi Tracker · v12</div>
+  <div class="foot" id="foot">Multi Tracker · v13</div>
 </div>
 
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
@@ -769,7 +771,8 @@
 
   /* ---------- tabs ---------- */
   var TABKEY="multiTracker.tab";
-  var taskFilter="all";
+  var taskFilter={type:"all",value:null};
+  function matchFilter(t){var f=taskFilter; return f.type==="all"||(f.type==="project"&&t.project===f.value)||(f.type==="group"&&(t.group||"")===f.value);}
   var selectMode=false, selected={};
   function switchTab(name){
     var tabs=document.querySelectorAll('#tabs .tab');
@@ -799,15 +802,18 @@
       '<span class="wpill"><b>'+c.doing+'</b><span>Doing</span></span>'+
       '<span class="wpill"><b>'+c.done+'</b><span>Done</span></span>'+
       (c.over?'<span class="wpill over"><b>'+c.over+'</b><span>Overdue</span></span>':'');
-    var projs=projects();
-    if(taskFilter!=="all"&&projs.indexOf(taskFilter)<0)taskFilter="all";
+    var projs=projects(), grps=taskGroups();
+    if(taskFilter.type==="project"&&projs.indexOf(taskFilter.value)<0)taskFilter={type:"all",value:null};
+    if(taskFilter.type==="group"&&grps.indexOf(taskFilter.value)<0)taskFilter={type:"all",value:null};
     var fEl=document.getElementById("taskFilters");
-    fEl.style.display=projs.length?"flex":"none";
-    fEl.innerHTML='<button class="fchip" data-f="all" aria-pressed="'+(taskFilter==="all")+'">All</button>'+
-      projs.map(function(p){return '<button class="fchip" data-f="'+esc(p)+'" aria-pressed="'+(taskFilter===p)+'">'+esc(p)+'</button>';}).join("");
+    fEl.style.display=(projs.length||grps.length)?"flex":"none";
+    var fhtml='<button class="fchip" data-ft="all" aria-pressed="'+(taskFilter.type==="all")+'">All</button>';
+    projs.forEach(function(p){ fhtml+='<button class="fchip" data-ft="project" data-f="'+esc(p)+'" aria-pressed="'+(taskFilter.type==="project"&&taskFilter.value===p)+'">'+esc(p)+'</button>'; });
+    grps.forEach(function(g){ fhtml+='<button class="fchip grp" data-ft="group" data-f="'+esc(g)+'" aria-pressed="'+(taskFilter.type==="group"&&taskFilter.value===g)+'">🏷 '+esc(g)+'</button>'; });
+    fEl.innerHTML=fhtml;
     var html="";
     STATUS.forEach(function(st){
-      var list=state.tasks.filter(function(t){return t.status===st[0]&&(taskFilter==="all"||t.project===taskFilter);});
+      var list=state.tasks.filter(function(t){return t.status===st[0]&&matchFilter(t);});
       list.sort(function(a,b){ var pa=a.priority?PRIO[a.priority].r:0,pb=b.priority?PRIO[b.priority].r:0;
         if(pb!==pa)return pb-pa; var da=a.due||"9999-99",db=b.due||"9999-99"; return da<db?-1:da>db?1:0; });
       html+='<div class="tsection '+st[2]+'"><div class="tsection-h"><span class="dot"></span><h2>'+st[1]+'</h2><span class="n">'+list.length+'</span></div>';
@@ -928,14 +934,14 @@
     function hexA(hex,a){var h=hex.replace("#","");return "rgba("+parseInt(h.slice(0,2),16)+","+parseInt(h.slice(2,4),16)+","+parseInt(h.slice(4,6),16)+","+a+")";}
     function draw(){
       var td=todayStr(), flt=taskFilter;
-      var tasks=state.tasks.filter(function(t){return flt==="all"||t.project===flt;});
+      var tasks=state.tasks.filter(matchFilter);
       var c={todo:0,doing:0,done:0,over:0};
       tasks.forEach(function(t){c[t.status]=(c[t.status]||0)+1; if(t.status!=="done"&&t.due&&t.due<td)c.over++;});
       var total=tasks.length, pct=total?Math.round(c.done/total*100):0;
       var P={bg:"#FFFFFF",panel:"#F5F6F3",ink:"#181A18",mut:"#6B6E69",faint:"#9DA097",line:"#E6E6E1",
         accent:"#17915A",accentSoft:"#E3F1EA",over:"#CF5546",amber:"#C7891A",hi:"#CF5546",med:"#E08A3C",low:"#7C8A82"};
       var W=1080,pad=56,cW=W-pad*2,taskH=92,secHeadH=52,secGap=12,subLH=36,subStart=100,subPad=20;
-      var showSubs=flt!=="all";  // expand subtasks only when a single project is filtered
+      var showSubs=flt.type!=="all";  // expand subtasks whenever a single project OR group is filtered
       function subsOf(t){return (showSubs&&t.subtasks&&t.subtasks.length)?t.subtasks:[];}
       function cardH(t){var n=subsOf(t).length; return n?(subStart+(n-1)*subLH+subPad):80;}
       function advance(t){return cardH(t)+12;}
@@ -966,7 +972,8 @@
       var M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],now=new Date();
       var dstr=now.getDate()+" "+M[now.getMonth()]+" "+now.getFullYear();
       x.fillStyle=P.mut; x.font='500 22px '+BODY; x.textAlign="right";
-      x.fillText(dstr+"   ·   "+(flt!=="all"?"# "+flt:"All projects"),W-pad,y+20); x.textAlign="left";
+      var subLabel=flt.type==="project"?"# "+flt.value:flt.type==="group"?"Group: "+flt.value:"All projects";
+      x.fillText(dstr+"   ·   "+subLabel,W-pad,y+20); x.textAlign="left";
       y+=110;
       x.strokeStyle=P.line; x.lineWidth=1; x.beginPath(); x.moveTo(pad,y); x.lineTo(W-pad,y); x.stroke(); y+=34;
       // stat tiles
@@ -1078,7 +1085,9 @@
     var row=e.target.closest("[data-task]"); if(row){ openTask(row.dataset.task); }
   });
   document.getElementById("taskFilters").addEventListener("click",function(e){
-    var f=e.target.closest("[data-f]"); if(!f)return; taskFilter=f.dataset.f; renderWork();
+    var f=e.target.closest("[data-ft]"); if(!f)return;
+    taskFilter=f.dataset.ft==="all"?{type:"all",value:null}:{type:f.dataset.ft,value:f.dataset.f};
+    renderWork();
   });
   document.getElementById("addTask").onclick=function(){ openTask(null); };
   document.getElementById("exportBtn").onclick=openReport;
@@ -1280,7 +1289,7 @@
       '<button class="menu-item" id="miImport"><span class="mi">⬆️</span>Import backup</button>'+
       '<button class="menu-item" id="miReset"><span class="mi">♻️</span>Reset this month</button>'+
       '<div class="actions"><button class="btn" id="miClose">Close</button></div>'+
-      '<div class="ver">v12 · sign in (☁️) to sync across devices</div>'
+      '<div class="ver">v13 · sign in (☁️) to sync across devices</div>'
     );
     document.getElementById("miClose").onclick=closeSheet;
     document.getElementById("miExport").onclick=function(){
