@@ -272,7 +272,7 @@
   .filters::-webkit-scrollbar{display:none}
   .fchip{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--muted);
     font-family:var(--font-body);font-weight:600;font-size:12px;padding:6px 12px;border-radius:999px;
-    white-space:nowrap;cursor:pointer;flex:none}
+    white-space:nowrap;cursor:pointer;flex:none;max-width:190px;overflow:hidden;text-overflow:ellipsis}
   .fchip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
   .fchip.grp{border-color:var(--accent);color:var(--accent-ink)}
   .fchip.grp[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
@@ -518,7 +518,7 @@
     <div class="selbar" id="selBar" hidden></div>
   </div><!-- /panel-work -->
 
-  <div class="foot" id="foot">Multi Tracker · v13</div>
+  <div class="foot" id="foot">Multi Tracker · v14</div>
 </div>
 
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
@@ -752,7 +752,7 @@
   /* ---------- tabs ---------- */
   var TABKEY="multiTracker.tab";
   var taskFilter={type:"all",value:null};
-  function matchFilter(t){var f=taskFilter; return f.type==="all"||(f.type==="project"&&t.project===f.value)||(f.type==="group"&&(t.group||"")===f.value);}
+  function matchFilter(t){var f=taskFilter; return f.type==="all"||(f.type==="task"&&t.id===f.value)||(f.type==="project"&&t.project===f.value)||(f.type==="group"&&(t.group||"")===f.value);}
   var selectMode=false, selected={};
   function switchTab(name){
     var tabs=document.querySelectorAll('#tabs .tab');
@@ -782,13 +782,15 @@
       '<span class="wpill"><b>'+c.doing+'</b><span>Doing</span></span>'+
       '<span class="wpill"><b>'+c.done+'</b><span>Done</span></span>'+
       (c.over?'<span class="wpill over"><b>'+c.over+'</b><span>Overdue</span></span>':'');
-    var projs=projects(), grps=taskGroups();
-    if(taskFilter.type==="project"&&projs.indexOf(taskFilter.value)<0)taskFilter={type:"all",value:null};
+    var grps=taskGroups();
+    var sord={todo:0,doing:1,done:2};
+    var taskChips=state.tasks.slice().sort(function(a,b){var s=(sord[a.status]||0)-(sord[b.status]||0); if(s)return s; return a.title<b.title?-1:a.title>b.title?1:0;});
+    if(taskFilter.type==="task"&&!findTask(taskFilter.value))taskFilter={type:"all",value:null};
     if(taskFilter.type==="group"&&grps.indexOf(taskFilter.value)<0)taskFilter={type:"all",value:null};
     var fEl=document.getElementById("taskFilters");
-    fEl.style.display=(projs.length||grps.length)?"flex":"none";
+    fEl.style.display=(taskChips.length||grps.length)?"flex":"none";
     var fhtml='<button class="fchip" data-ft="all" aria-pressed="'+(taskFilter.type==="all")+'">All</button>';
-    projs.forEach(function(p){ fhtml+='<button class="fchip" data-ft="project" data-f="'+esc(p)+'" aria-pressed="'+(taskFilter.type==="project"&&taskFilter.value===p)+'">'+esc(p)+'</button>'; });
+    taskChips.forEach(function(t){ fhtml+='<button class="fchip" data-ft="task" data-f="'+t.id+'" aria-pressed="'+(taskFilter.type==="task"&&taskFilter.value===t.id)+'">'+esc(t.title)+'</button>'; });
     grps.forEach(function(g){ fhtml+='<button class="fchip grp" data-ft="group" data-f="'+esc(g)+'" aria-pressed="'+(taskFilter.type==="group"&&taskFilter.value===g)+'">🏷 '+esc(g)+'</button>'; });
     fEl.innerHTML=fhtml;
     var html="";
@@ -952,7 +954,7 @@
       var M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],now=new Date();
       var dstr=now.getDate()+" "+M[now.getMonth()]+" "+now.getFullYear();
       x.fillStyle=P.mut; x.font='500 22px '+BODY; x.textAlign="right";
-      var subLabel=flt.type==="project"?"# "+flt.value:flt.type==="group"?"Group: "+flt.value:"All projects";
+      var subLabel=flt.type==="task"?(findTask(flt.value)?findTask(flt.value).title:"Task"):flt.type==="project"?"# "+flt.value:flt.type==="group"?"Group: "+flt.value:"All tasks";
       x.fillText(dstr+"   ·   "+subLabel,W-pad,y+20); x.textAlign="left";
       y+=110;
       x.strokeStyle=P.line; x.lineWidth=1; x.beginPath(); x.moveTo(pad,y); x.lineTo(W-pad,y); x.stroke(); y+=34;
@@ -1269,7 +1271,7 @@
       '<button class="menu-item" id="miImport"><span class="mi">⬆️</span>Import backup</button>'+
       '<button class="menu-item" id="miReset"><span class="mi">♻️</span>Reset this month</button>'+
       '<div class="actions"><button class="btn" id="miClose">Close</button></div>'+
-      '<div class="ver">v13 · sign in (☁️) to sync across devices</div>'
+      '<div class="ver">v14 · sign in (☁️) to sync across devices</div>'
     );
     document.getElementById("miClose").onclick=closeSheet;
     document.getElementById("miExport").onclick=function(){
