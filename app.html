@@ -483,7 +483,7 @@
     <div id="taskLists"></div>
   </div><!-- /panel-work -->
 
-  <div class="foot" id="foot">Multi Tracker · v7</div>
+  <div class="foot" id="foot">Multi Tracker · v8</div>
 </div>
 
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
@@ -867,9 +867,13 @@
       var total=tasks.length, pct=total?Math.round(c.done/total*100):0;
       var P={bg:"#FFFFFF",panel:"#F5F6F3",ink:"#181A18",mut:"#6B6E69",faint:"#9DA097",line:"#E6E6E1",
         accent:"#17915A",accentSoft:"#E3F1EA",over:"#CF5546",amber:"#C7891A",hi:"#CF5546",med:"#E08A3C",low:"#7C8A82"};
-      var W=1080,pad=56,cW=W-pad*2,taskH=92,secHeadH=52,secGap=12;
+      var W=1080,pad=56,cW=W-pad*2,taskH=92,secHeadH=52,secGap=12,subLH=30;
+      var showSubs=flt!=="all";  // expand subtasks only when a single project is filtered
+      function subsOf(t){return (showSubs&&t.subtasks&&t.subtasks.length)?t.subtasks:[];}
+      function cardH(t){var n=subsOf(t).length; return n?(78+n*subLH+8):80;}
+      function advance(t){return cardH(t)+12;}
       var statuses=STATUS.filter(function(st){return tasks.some(function(t){return t.status===st[0];});});
-      var secSum=0; statuses.forEach(function(st){var n=tasks.filter(function(t){return t.status===st[0];}).length; secSum+=secHeadH+n*taskH+secGap;});
+      var secSum=0; statuses.forEach(function(st){var sh=0; tasks.forEach(function(t){if(t.status===st[0])sh+=advance(t);}); secSum+=secHeadH+sh+secGap;});
       var base=386; var yEnd=total?(base+secSum):(base+70); var H=Math.round(yEnd+72);
       var S=2, cv=document.createElement("canvas"); cv.width=W*S; cv.height=H*S;
       var x=cv.getContext("2d"); x.scale(S,S); x.textBaseline="alphabetic";
@@ -911,7 +915,7 @@
         x.fillStyle=P.ink; x.font='600 24px '+DISP; var lbl=st[1].toUpperCase(); x.fillText(lbl,pad+22,y+21);
         x.fillStyle=P.faint; x.font='600 18px '+MONO; x.fillText(String(list.length),pad+22+x.measureText(lbl).width+14,y+20);
         y+=secHeadH;
-        list.forEach(function(t){var ch=taskH-12;
+        list.forEach(function(t){var ch=cardH(t);
           x.fillStyle=P.bg; rr(pad,y,cW,ch,16); x.fill(); x.strokeStyle=P.line; x.lineWidth=1; rr(pad,y,cW,ch,16); x.stroke();
           x.fillStyle=sc[st[0]]; rr(pad+1,y+10,5,ch-20,3); x.fill();
           x.fillStyle=P.ink; x.font='600 27px '+BODY; x.fillText(trunc(t.title,cW-44),pad+22,y+34);
@@ -919,8 +923,15 @@
           if(t.priority){var pc=t.priority==="high"?P.hi:t.priority==="med"?P.med:P.low; mx+=pill(mx,my,PRIO[t.priority].t.toUpperCase(),hexA(pc,0.14),pc)+8;}
           if(t.due){var ov=t.status!=="done"&&t.due<td; mx+=pill(mx,my,fmtDue(t.due),ov?hexA(P.over,0.14):P.panel,ov?P.over:P.mut)+8;}
           if(t.project)mx+=pill(mx,my,"# "+t.project,P.accentSoft,P.accent)+8;
-          if(t.subtasks&&t.subtasks.length){var dn=t.subtasks.filter(function(s){return s.done;}).length; mx+=pill(mx,my,dn+"/"+t.subtasks.length+" sub",P.panel,P.mut)+8;}
-          y+=taskH;});
+          if(!showSubs&&t.subtasks&&t.subtasks.length){var dn=t.subtasks.filter(function(s){return s.done;}).length; mx+=pill(mx,my,dn+"/"+t.subtasks.length+" sub",P.panel,P.mut)+8;}
+          subsOf(t).forEach(function(s,i){var ly=y+86+i*subLH,bx=pad+24,by=ly-14,bs=16;
+            if(s.done){x.fillStyle=P.accent; rr(bx,by,bs,bs,4); x.fill(); x.strokeStyle="#fff"; x.lineWidth=2; x.beginPath(); x.moveTo(bx+4,by+8); x.lineTo(bx+7,by+11); x.lineTo(bx+12,by+5); x.stroke();}
+            else{x.strokeStyle=P.line; x.lineWidth=1.5; rr(bx,by,bs,bs,4); x.stroke();}
+            x.font='500 20px '+BODY; var stx=bx+26, txt=trunc(s.text,cW-(stx-pad)-24);
+            x.fillStyle=s.done?P.faint:P.mut; x.fillText(txt,stx,ly);
+            if(s.done){var w=x.measureText(txt).width; x.strokeStyle=P.faint; x.lineWidth=1.3; x.beginPath(); x.moveTo(stx,ly-6); x.lineTo(stx+w,ly-6); x.stroke();}
+          });
+          y+=advance(t);});
         y+=secGap;
       });
       x.strokeStyle=P.line; x.beginPath(); x.moveTo(pad,H-52); x.lineTo(W-pad,H-52); x.stroke();
@@ -1151,7 +1162,7 @@
       '<button class="menu-item" id="miImport"><span class="mi">⬆️</span>Import backup</button>'+
       '<button class="menu-item" id="miReset"><span class="mi">♻️</span>Reset this month</button>'+
       '<div class="actions"><button class="btn" id="miClose">Close</button></div>'+
-      '<div class="ver">v7 · sign in (☁️) to sync across devices</div>'
+      '<div class="ver">v8 · sign in (☁️) to sync across devices</div>'
     );
     document.getElementById("miClose").onclick=closeSheet;
     document.getElementById("miExport").onclick=function(){
