@@ -366,6 +366,32 @@
   .acct-sub{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.4}
   .btn.warn{color:var(--m1);border-color:var(--m1);background:transparent}
 
+  /* ---- due-date reminders ---- */
+  .tabbadge{display:inline-grid;place-items:center;min-width:17px;height:17px;padding:0 4px;margin-left:6px;
+    border-radius:9px;background:var(--m1);color:#fff;font-family:var(--font-mono);font-size:10px;font-weight:600;
+    line-height:1;vertical-align:middle}
+  .tabbadge[hidden]{display:none}
+  .reminders{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--today);
+    border-radius:14px;box-shadow:var(--shadow);padding:12px 14px;margin-bottom:12px}
+  .rem-h{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+  .rem-h .rem-ic{font-size:15px}
+  .rem-h b{font-family:var(--font-display);font-size:14px}
+  .rem-tag{font-family:var(--font-mono);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;
+    padding:2px 7px;border-radius:999px}
+  .rem-tag.over{background:var(--accent-wash);color:var(--m1);background:color-mix(in srgb,var(--m1) 14%,transparent)}
+  .rem-tag.soon{background:color-mix(in srgb,var(--today) 16%,transparent);color:var(--today)}
+  .rem-enable{margin-left:auto;appearance:none;border:1px solid var(--today);background:var(--today-wash);
+    color:var(--today);font-family:var(--font-body);font-weight:600;font-size:12px;padding:5px 10px;border-radius:9px;cursor:pointer}
+  .rem-list{display:flex;flex-direction:column;gap:2px}
+  .rem-item{display:flex;align-items:center;gap:9px;width:100%;background:none;border:none;
+    padding:7px 4px;border-radius:8px;cursor:pointer;text-align:left;color:var(--ink);font-family:var(--font-body)}
+  .rem-item:hover{background:var(--surface-2)}
+  .rem-dot{flex:none;width:8px;height:8px;border-radius:50%}
+  .rem-dot.over{background:var(--m1)} .rem-dot.soon{background:var(--today)}
+  .rem-ttl{flex:1;font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rem-due{flex:none;font-family:var(--font-mono);font-size:11px;font-variant-numeric:tabular-nums}
+  .rem-due.over{color:var(--m1);font-weight:600} .rem-due.soon{color:var(--today)}
+
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -381,7 +407,7 @@
 
   <div class="tabs" role="tablist" id="tabs">
     <button class="tab" role="tab" aria-selected="true" data-tab="habit">✅ Habit</button>
-    <button class="tab" role="tab" aria-selected="false" data-tab="work">🧰 Work Task</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="work">🧰 Work Task<span class="tabbadge" id="workBadge" hidden></span></button>
     <button class="tab" role="tab" disabled>💪 Fitness <span class="soon">soon</span></button>
     <button class="tab" role="tab" disabled>💰 Finance <span class="soon">soon</span></button>
     <button class="tab" role="tab" disabled>🍎 Diet <span class="soon">soon</span></button>
@@ -463,6 +489,7 @@
   </div><!-- /panel-habit -->
 
   <div id="panel-work" hidden>
+    <div class="reminders" id="reminders" hidden></div>
     <div class="work-top">
       <div class="work-sum" id="workSum"></div>
       <button class="chip accent" id="addTask">＋ Task</button>
@@ -471,7 +498,7 @@
     <div id="taskLists"></div>
   </div><!-- /panel-work -->
 
-  <div class="foot" id="foot">Multi Tracker · v5</div>
+  <div class="foot" id="foot">Multi Tracker · v6</div>
 </div>
 
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
@@ -750,6 +777,73 @@
       html+='</div>';
     });
     document.getElementById("taskLists").innerHTML=html;
+    renderReminders();
+    updateReminderBadge();
+  }
+
+  /* ---------- due-date reminders + notifications ---------- */
+  function reminders(){
+    var td=todayStr();
+    var d=new Date(td+"T00:00:00"); d.setDate(d.getDate()+3);
+    var soonMax=d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+    var over=[], soon=[];
+    state.tasks.forEach(function(t){
+      if(t.status==="done"||!t.due)return;
+      if(t.due<td)over.push(t); else if(t.due<=soonMax)soon.push(t);
+    });
+    var srt=function(a,b){return a.due<b.due?-1:a.due>b.due?1:0;};
+    over.sort(srt); soon.sort(srt);
+    return {over:over,soon:soon};
+  }
+  function updateReminderBadge(){
+    var b=document.getElementById("workBadge"); if(!b)return;
+    var r=reminders(), n=r.over.length+r.soon.length;
+    if(n){ b.textContent=n; b.hidden=false; } else { b.hidden=true; }
+  }
+  function renderReminders(){
+    var el=document.getElementById("reminders"); if(!el)return;
+    var r=reminders(), total=r.over.length+r.soon.length;
+    if(!total){ el.hidden=true; el.innerHTML=""; return; }
+    function item(t,kind){
+      return '<button class="rem-item" data-task="'+t.id+'"><span class="rem-dot '+kind+'"></span>'+
+        '<span class="rem-ttl">'+esc(t.title)+'</span>'+
+        '<span class="rem-due '+kind+'">'+(kind==="over"?"Lewat · ":"")+fmtDue(t.due)+'</span></button>';
+    }
+    var items=r.over.map(function(t){return item(t,"over");}).concat(r.soon.map(function(t){return item(t,"soon");}));
+    var enable=(window.Notification&&Notification.permission==="default")
+      ? '<button class="rem-enable" id="remEnable">🔔 Hidupkan peringatan</button>' : '';
+    el.innerHTML='<div class="rem-h"><span class="rem-ic">🔔</span><b>'+total+' peringatan</b>'+
+      (r.over.length?'<span class="rem-tag over">'+r.over.length+' lewat</span>':'')+
+      (r.soon.length?'<span class="rem-tag soon">'+r.soon.length+' akan tiba</span>':'')+
+      enable+'</div><div class="rem-list">'+items.join("")+'</div>';
+    el.hidden=false;
+  }
+  document.getElementById("reminders").addEventListener("click",function(e){
+    if(e.target.closest("#remEnable")){ requestNotif(); return; }
+    var it=e.target.closest("[data-task]"); if(it){ openTask(it.dataset.task); }
+  });
+  function requestNotif(){
+    if(!window.Notification)return;
+    Notification.requestPermission().then(function(p){ if(p==="granted")maybeNotify(); renderReminders(); });
+  }
+  function showNotif(title,opts){
+    if(navigator.serviceWorker&&navigator.serviceWorker.ready){
+      navigator.serviceWorker.ready.then(function(reg){reg.showNotification(title,opts);})
+        .catch(function(){try{new Notification(title,opts);}catch(e){}});
+    } else { try{new Notification(title,opts);}catch(e){} }
+  }
+  function maybeNotify(){
+    if(!window.Notification||Notification.permission!=="granted")return;
+    var r=reminders(), total=r.over.length+r.soon.length; if(!total)return;
+    var today=todayStr(), last=null; try{last=localStorage.getItem("multiTracker.notifiedDate");}catch(e){}
+    if(last===today)return;
+    try{localStorage.setItem("multiTracker.notifiedDate",today);}catch(e){}
+    var parts=[]; if(r.over.length)parts.push(r.over.length+" lewat"); if(r.soon.length)parts.push(r.soon.length+" akan tiba");
+    var first=(r.over[0]||r.soon[0]);
+    showNotif("Multi Tracker — peringatan task",{
+      body:parts.join(", ")+" · "+first.title, tag:"mt-reminders", renotify:true,
+      icon:"./icon-192.png", badge:"./icon-192.png"
+    });
   }
   function taskRow(t,td){
     var stcls=t.status==="done"?"done":t.status==="doing"?"doing":"", meta="";
@@ -971,7 +1065,7 @@
       '<button class="menu-item" id="miImport"><span class="mi">⬆️</span>Import backup</button>'+
       '<button class="menu-item" id="miReset"><span class="mi">♻️</span>Reset this month</button>'+
       '<div class="actions"><button class="btn" id="miClose">Close</button></div>'+
-      '<div class="ver">v5 · sign in (☁️) to sync across devices</div>'
+      '<div class="ver">v6 · sign in (☁️) to sync across devices</div>'
     );
     document.getElementById("miClose").onclick=closeSheet;
     document.getElementById("miExport").onclick=function(){
@@ -1034,7 +1128,7 @@
       updateCloudUI();
     }).catch(function(e){ syncing=false; if(e.status===401){clearAuth();} else syncErr=true; updateCloudUI(); }); }
 
-  function reRender(){ renderAll(); if(!document.getElementById("panel-work").hidden) renderWork(); }
+  function reRender(){ renderAll(); if(!document.getElementById("panel-work").hidden) renderWork(); updateReminderBadge(); }
   function adoptRemote(data){
     if(data.habits)state.habits=data.habits; state.months=data.months||{}; state.tasks=data.tasks||[];
     state.updated=data.updated||Date.now();
@@ -1121,8 +1215,12 @@
   updateCloudUI();
   var lastTab=null; try{lastTab=localStorage.getItem(TABKEY);}catch(e){}
   if(lastTab==="work") switchTab("work"); else setTimeout(scrollToToday,60);
+  updateReminderBadge();
   if(getAuth()) pullState();
-  document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="visible"&&getAuth()&&!syncing) pullState(); });
+  setTimeout(maybeNotify,800);
+  document.addEventListener("visibilitychange",function(){
+    if(document.visibilityState==="visible"){ if(getAuth()&&!syncing)pullState(); updateReminderBadge(); maybeNotify(); }
+  });
   setInterval(function(){ if(getAuth()&&document.visibilityState==="visible"&&!syncing) pullState(); },30000);
 })();
 </script>

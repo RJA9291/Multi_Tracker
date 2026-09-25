@@ -1,6 +1,6 @@
 /* Multi Tracker service worker.
    Bump CACHE on every ship so returning visitors get fresh assets. */
-const CACHE = "multi-tracker-v5";
+const CACHE = "multi-tracker-v6";
 const ASSETS = [
   "./",
   "./manifest.webmanifest",
@@ -20,6 +20,16 @@ self.addEventListener("activate", (e) => {
     caches.keys().then((keys) =>
       Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
     ).then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  e.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      for (const c of list) { if ("focus" in c) return c.focus(); }
+      if (self.clients.openWindow) return self.clients.openWindow("./");
+    })
   );
 });
 
