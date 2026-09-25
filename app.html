@@ -483,7 +483,7 @@
     <div id="taskLists"></div>
   </div><!-- /panel-work -->
 
-  <div class="foot" id="foot">Multi Tracker · v8</div>
+  <div class="foot" id="foot">Multi Tracker · v9</div>
 </div>
 
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
@@ -867,10 +867,10 @@
       var total=tasks.length, pct=total?Math.round(c.done/total*100):0;
       var P={bg:"#FFFFFF",panel:"#F5F6F3",ink:"#181A18",mut:"#6B6E69",faint:"#9DA097",line:"#E6E6E1",
         accent:"#17915A",accentSoft:"#E3F1EA",over:"#CF5546",amber:"#C7891A",hi:"#CF5546",med:"#E08A3C",low:"#7C8A82"};
-      var W=1080,pad=56,cW=W-pad*2,taskH=92,secHeadH=52,secGap=12,subLH=30;
+      var W=1080,pad=56,cW=W-pad*2,taskH=92,secHeadH=52,secGap=12,subLH=36,subStart=100,subPad=20;
       var showSubs=flt!=="all";  // expand subtasks only when a single project is filtered
       function subsOf(t){return (showSubs&&t.subtasks&&t.subtasks.length)?t.subtasks:[];}
-      function cardH(t){var n=subsOf(t).length; return n?(78+n*subLH+8):80;}
+      function cardH(t){var n=subsOf(t).length; return n?(subStart+(n-1)*subLH+subPad):80;}
       function advance(t){return cardH(t)+12;}
       var statuses=STATUS.filter(function(st){return tasks.some(function(t){return t.status===st[0];});});
       var secSum=0; statuses.forEach(function(st){var sh=0; tasks.forEach(function(t){if(t.status===st[0])sh+=advance(t);}); secSum+=secHeadH+sh+secGap;});
@@ -924,7 +924,7 @@
           if(t.due){var ov=t.status!=="done"&&t.due<td; mx+=pill(mx,my,fmtDue(t.due),ov?hexA(P.over,0.14):P.panel,ov?P.over:P.mut)+8;}
           if(t.project)mx+=pill(mx,my,"# "+t.project,P.accentSoft,P.accent)+8;
           if(!showSubs&&t.subtasks&&t.subtasks.length){var dn=t.subtasks.filter(function(s){return s.done;}).length; mx+=pill(mx,my,dn+"/"+t.subtasks.length+" sub",P.panel,P.mut)+8;}
-          subsOf(t).forEach(function(s,i){var ly=y+86+i*subLH,bx=pad+24,by=ly-14,bs=16;
+          subsOf(t).forEach(function(s,i){var ly=y+subStart+i*subLH,bx=pad+24,by=ly-14,bs=16;
             if(s.done){x.fillStyle=P.accent; rr(bx,by,bs,bs,4); x.fill(); x.strokeStyle="#fff"; x.lineWidth=2; x.beginPath(); x.moveTo(bx+4,by+8); x.lineTo(bx+7,by+11); x.lineTo(bx+12,by+5); x.stroke();}
             else{x.strokeStyle=P.line; x.lineWidth=1.5; rr(bx,by,bs,bs,4); x.stroke();}
             x.font='500 20px '+BODY; var stx=bx+26, txt=trunc(s.text,cW-(stx-pad)-24);
@@ -1162,7 +1162,7 @@
       '<button class="menu-item" id="miImport"><span class="mi">⬆️</span>Import backup</button>'+
       '<button class="menu-item" id="miReset"><span class="mi">♻️</span>Reset this month</button>'+
       '<div class="actions"><button class="btn" id="miClose">Close</button></div>'+
-      '<div class="ver">v8 · sign in (☁️) to sync across devices</div>'
+      '<div class="ver">v9 · sign in (☁️) to sync across devices</div>'
     );
     document.getElementById("miClose").onclick=closeSheet;
     document.getElementById("miExport").onclick=function(){
