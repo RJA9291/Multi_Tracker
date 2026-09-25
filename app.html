@@ -374,6 +374,37 @@
   .rem-due{flex:none;font-family:var(--font-mono);font-size:11px;font-variant-numeric:tabular-nums}
   .rem-due.over{color:var(--m1);font-weight:600} .rem-due.soon{color:var(--today)}
 
+  /* ---- task grouping + multi-select ---- */
+  .tgroup-h{display:flex;align-items:center;gap:8px;margin:12px 2px 6px;padding-left:2px}
+  .tgroup-h::before{content:"";width:3px;height:15px;background:var(--accent);border-radius:2px;flex:none}
+  .tgroup-name{font-family:var(--font-display);font-weight:600;font-size:14px;letter-spacing:-.01em}
+  .tgroup-n{font-family:var(--font-mono);font-size:11px;color:var(--faint)}
+  .tgroup-h.none::before{background:var(--line-strong)}
+  .tgroup-h.none .tgroup-name{color:var(--muted);font-weight:500}
+  .task.selectable{cursor:pointer}
+  .task.selected{background:var(--accent-wash)}
+  .selbox{width:22px;height:22px;border-radius:50%;border:2px solid var(--line-strong);background:var(--surface);
+    flex:none;position:relative}
+  .selbox.on{background:var(--accent);border-color:var(--accent)}
+  .selbox.on::after{content:"";position:absolute;left:6px;top:3px;width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(42deg)}
+  .chip.sq.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .selbar{position:fixed;left:14px;right:14px;bottom:calc(14px + env(safe-area-inset-bottom));
+    z-index:40;background:var(--ink);color:var(--paper);border-radius:14px;box-shadow:var(--shadow);
+    padding:9px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;
+    max-width:732px;margin:0 auto}
+  .selbar[hidden]{display:none}
+  .selbar .selcount{font-family:var(--font-mono);font-size:13px;font-weight:600;white-space:nowrap}
+  .selbtns{display:flex;gap:6px}
+  .selbtn{appearance:none;border:1px solid rgba(255,255,255,.22);background:transparent;color:var(--paper);
+    font-family:var(--font-body);font-weight:600;font-size:13px;padding:8px 12px;border-radius:9px;cursor:pointer;white-space:nowrap}
+  .selbtn.primary{background:var(--accent);border-color:var(--accent)}
+  .selbtn.ghost{border-color:transparent;opacity:.85}
+  .selbtn[disabled]{opacity:.4;cursor:default}
+  .gchips{display:flex;flex-wrap:wrap;gap:6px;margin:-2px 0 10px}
+  .gchip{appearance:none;border:1px solid var(--line-strong);background:var(--surface-2);color:var(--ink);
+    font-family:var(--font-body);font-size:13px;padding:7px 12px;border-radius:999px;cursor:pointer}
+  .gchip:active{transform:scale(.96)}
+
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -475,15 +506,17 @@
     <div class="work-top">
       <div class="work-sum" id="workSum"></div>
       <div class="work-actions">
+        <button class="chip sq" id="selectBtn" aria-label="Select and group tasks" title="Pilih & group">☑</button>
         <button class="chip sq" id="exportBtn" aria-label="Export report" title="Export report">📤</button>
         <button class="chip accent" id="addTask">＋ Task</button>
       </div>
     </div>
     <div class="filters" id="taskFilters"></div>
     <div id="taskLists"></div>
+    <div class="selbar" id="selBar" hidden></div>
   </div><!-- /panel-work -->
 
-  <div class="foot" id="foot">Multi Tracker · v11</div>
+  <div class="foot" id="foot">Multi Tracker · v12</div>
 </div>
 
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
@@ -717,6 +750,7 @@
   /* ---------- tabs ---------- */
   var TABKEY="multiTracker.tab";
   var taskFilter="all";
+  var selectMode=false, selected={};
   function switchTab(name){
     var tabs=document.querySelectorAll('#tabs .tab');
     [].forEach.call(tabs,function(t){ if(t.dataset.tab) t.setAttribute("aria-selected", t.dataset.tab===name?"true":"false"); });
@@ -757,11 +791,24 @@
       list.sort(function(a,b){ var pa=a.priority?PRIO[a.priority].r:0,pb=b.priority?PRIO[b.priority].r:0;
         if(pb!==pa)return pb-pa; var da=a.due||"9999-99",db=b.due||"9999-99"; return da<db?-1:da>db?1:0; });
       html+='<div class="tsection '+st[2]+'"><div class="tsection-h"><span class="dot"></span><h2>'+st[1]+'</h2><span class="n">'+list.length+'</span></div>';
-      if(list.length){ html+='<div class="tcard">'+list.map(function(t){return taskRow(t,td);}).join("")+'</div>'; }
+      if(list.length){
+        if(list.some(function(t){return t.group;})){
+          var byG={},order=[];
+          list.forEach(function(t){var g=t.group||"__none"; if(!byG[g]){byG[g]=[];order.push(g);} byG[g].push(t);});
+          order.sort(function(a,b){ if(a==="__none")return 1; if(b==="__none")return -1; return a<b?-1:a>b?1:0; });
+          order.forEach(function(g){var gl=byG[g],none=g==="__none";
+            html+='<div class="tgroup-h'+(none?" none":"")+'"><span class="tgroup-name">'+(none?"Ungrouped":esc(g))+'</span><span class="tgroup-n">'+gl.length+'</span></div>';
+            html+='<div class="tcard">'+gl.map(function(t){return taskRow(t,td);}).join("")+'</div>';
+          });
+        } else {
+          html+='<div class="tcard">'+list.map(function(t){return taskRow(t,td);}).join("")+'</div>';
+        }
+      }
       else{ html+='<div class="task-empty">'+(st[0]==="todo"?"No tasks yet — add one with ＋ Task":"Nothing here")+'</div>'; }
       html+='</div>';
     });
     document.getElementById("taskLists").innerHTML=html;
+    updateSelBar();
     renderReminders();
     updateReminderBadge();
   }
@@ -959,15 +1006,54 @@
     if(t.due){var over=t.status!=="done"&&t.due<td;meta+='<span class="badge due'+(over?' over':'')+'">📅 '+fmtDue(t.due)+'</span>';}
     if(t.project){meta+='<span class="badge tag"># '+esc(t.project)+'</span>';}
     if(t.subtasks&&t.subtasks.length){var dn=t.subtasks.filter(function(s){return s.done;}).length;meta+='<span class="badge subs">☑ '+dn+'/'+t.subtasks.length+'</span>';}
-    return '<div class="task'+(t.status==="done"?" done":"")+'" data-task="'+t.id+'">'+
-      '<button class="st-btn '+stcls+'" data-st="'+t.id+'" aria-label="Change status"></button>'+
+    var sel=!!selected[t.id];
+    return '<div class="task'+(t.status==="done"?" done":"")+(selectMode?" selectable":"")+(sel?" selected":"")+'" data-task="'+t.id+'">'+
+      (selectMode?'<span class="selbox'+(sel?" on":"")+'"></span>'
+                 :'<button class="st-btn '+stcls+'" data-st="'+t.id+'" aria-label="Change status"></button>')+
       '<div class="body"><div class="ttl">'+esc(t.title)+'</div>'+(meta?'<div class="meta">'+meta+'</div>':'')+'</div></div>';
   }
+  function taskGroups(){ var set={}; state.tasks.forEach(function(t){ if(t.group)set[t.group]=1; }); return Object.keys(set).sort(); }
+  function enterSelect(){ selectMode=true; selected={}; document.getElementById("selectBtn").classList.add("on"); renderWork(); }
+  function exitSelect(){ selectMode=false; selected={}; document.getElementById("selectBtn").classList.remove("on"); renderWork(); }
+  function toggleSelect(id){
+    selected[id]=!selected[id];
+    var row=document.querySelector('#taskLists .task[data-task="'+id+'"]');
+    if(row){ row.classList.toggle("selected",!!selected[id]); var b=row.querySelector(".selbox"); if(b)b.classList.toggle("on",!!selected[id]); }
+    updateSelBar();
+  }
+  function updateSelBar(){
+    var bar=document.getElementById("selBar"); if(!bar)return;
+    if(!selectMode){ bar.hidden=true; return; }
+    var ids=Object.keys(selected).filter(function(k){return selected[k];}), n=ids.length;
+    bar.hidden=false;
+    bar.innerHTML='<span class="selcount">'+n+' dipilih</span><div class="selbtns">'+
+      '<button class="selbtn" id="selUngroup"'+(n?"":" disabled")+'>Ungroup</button>'+
+      '<button class="selbtn primary" id="selGroup"'+(n?"":" disabled")+'>Group…</button>'+
+      '<button class="selbtn ghost" id="selCancel" aria-label="Batal" title="Batal">✕</button></div>';
+    document.getElementById("selCancel").onclick=exitSelect;
+    document.getElementById("selUngroup").onclick=function(){ if(!n)return; ids.forEach(function(id){var t=findTask(id); if(t)delete t.group;}); save(); exitSelect(); };
+    document.getElementById("selGroup").onclick=function(){ if(n)openGroupPicker(ids); };
+  }
+  function openGroupPicker(ids){
+    var groups=taskGroups();
+    showSheet('<h3>Group '+ids.length+' task</h3>'+
+      '<div class="field"><label>Nama group</label><input id="gName" type="text" maxlength="40" list="gList" placeholder="cth: Fasa Genset / Sprint 1"><datalist id="gList">'+
+        groups.map(function(g){return '<option value="'+esc(g)+'"></option>';}).join("")+'</datalist></div>'+
+      (groups.length?'<div class="gchips">'+groups.map(function(g){return '<button class="gchip" data-g="'+esc(g)+'">'+esc(g)+'</button>';}).join("")+'</div>':'')+
+      '<div class="actions"><button class="btn" id="gCancel">Cancel</button><button class="btn primary" id="gSave">Group</button></div>');
+    function apply(name){ ids.forEach(function(id){var t=findTask(id); if(t)t.group=name;}); save(); closeSheet(); exitSelect(); }
+    document.getElementById("gCancel").onclick=closeSheet;
+    document.getElementById("gSave").onclick=function(){ var v=document.getElementById("gName").value.trim(); if(v)apply(v); };
+    var gc=document.querySelector(".gchips"); if(gc)gc.addEventListener("click",function(e){var b=e.target.closest("[data-g]"); if(b)apply(b.dataset.g);});
+    setTimeout(function(){var f=document.getElementById("gName"); if(f)f.focus();},50);
+  }
+  document.getElementById("selectBtn").onclick=function(){ if(selectMode)exitSelect(); else enterSelect(); };
   function cycleStatus(id){ var t=findTask(id); if(!t)return;
     t.status=t.status==="todo"?"doing":t.status==="doing"?"done":"todo";
     t.done_at=t.status==="done"?Date.now():null; save(); renderWork(); }
 
   document.getElementById("taskLists").addEventListener("click",function(e){
+    if(selectMode){ var r=e.target.closest("[data-task]"); if(r) toggleSelect(r.dataset.task); return; }
     var st=e.target.closest("[data-st]"); if(st){ cycleStatus(st.dataset.st); return; }
     var row=e.target.closest("[data-task]"); if(row){ openTask(row.dataset.task); }
   });
@@ -1174,7 +1260,7 @@
       '<button class="menu-item" id="miImport"><span class="mi">⬆️</span>Import backup</button>'+
       '<button class="menu-item" id="miReset"><span class="mi">♻️</span>Reset this month</button>'+
       '<div class="actions"><button class="btn" id="miClose">Close</button></div>'+
-      '<div class="ver">v11 · sign in (☁️) to sync across devices</div>'
+      '<div class="ver">v12 · sign in (☁️) to sync across devices</div>'
     );
     document.getElementById("miClose").onclick=closeSheet;
     document.getElementById("miExport").onclick=function(){
