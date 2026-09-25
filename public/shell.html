@@ -288,7 +288,7 @@
   .wpill.over{border-color:var(--m1);background:color-mix(in srgb,var(--m1) 12%,transparent)}
   .wpill.over b,.wpill.over span{color:var(--m1)}
 
-  .filters{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:12px}
+  .filters{display:flex;flex-wrap:wrap;gap:6px;padding-bottom:12px}
   .filters::-webkit-scrollbar{display:none}
   .fchip{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--muted);
     font-family:var(--font-body);font-weight:600;font-size:12px;padding:6px 12px;border-radius:999px;
@@ -538,7 +538,7 @@
     <div class="selbar" id="selBar" hidden></div>
   </div><!-- /panel-work -->
 
-  <div class="foot" id="foot">Multi Tracker · v14</div>
+  <div class="foot" id="foot">Multi Tracker · v15</div>
 </div>
 
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
@@ -1291,7 +1291,7 @@
       '<button class="menu-item" id="miImport"><span class="mi">⬆️</span>Import backup</button>'+
       '<button class="menu-item" id="miReset"><span class="mi">♻️</span>Reset this month</button>'+
       '<div class="actions"><button class="btn" id="miClose">Close</button></div>'+
-      '<div class="ver">v14 · sign in (☁️) to sync across devices</div>'
+      '<div class="ver">v15 · sign in (☁️) to sync across devices</div>'
     );
     document.getElementById("miClose").onclick=closeSheet;
     document.getElementById("miExport").onclick=function(){
