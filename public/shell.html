@@ -427,6 +427,73 @@
     font-family:var(--font-body);font-size:13px;padding:7px 12px;border-radius:999px;cursor:pointer}
   .gchip:active{transform:scale(.96)}
 
+  /* ---- fitness ---- */
+  .fcard{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);
+    padding:14px 16px 16px;margin-bottom:14px}
+  .fc-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+  .fc-h h2{font-family:var(--font-display);font-weight:600;font-size:13px;text-transform:uppercase;
+    letter-spacing:.08em;color:var(--muted);margin:0}
+  .fc-sub{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;
+    color:var(--faint);margin:14px 0 8px}
+  .f-empty{color:var(--muted);font-size:13.5px;line-height:1.5;background:var(--surface-2);
+    border:1px dashed var(--line-strong);border-radius:12px;padding:12px 14px}
+  .fstat-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .fstat{flex:1;min-width:96px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .fstat .k{font-family:var(--font-mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint)}
+  .fstat .v{font-family:var(--font-mono);font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1.2}
+  .fstat .u{font-family:var(--font-mono);font-size:10px;color:var(--muted)}
+  .bmi-top{display:flex;align-items:center;gap:16px}
+  .bmi-num{font-family:var(--font-display);font-weight:700;font-size:46px;line-height:1;font-variant-numeric:tabular-nums}
+  .pillc{color:#fff;font-family:var(--font-body);font-weight:600;font-size:12px;padding:4px 11px;border-radius:999px;display:inline-block}
+  .bmi-sub{font-family:var(--font-mono);font-size:12px;color:var(--muted);margin-top:6px}
+  .bmi-gauge{position:relative;height:12px;border-radius:6px;margin:16px 0 4px;
+    background:linear-gradient(to right,var(--today) 0 17.5%,var(--accent) 17.5% 40%,var(--m2) 40% 62.5%,var(--m1) 62.5% 100%)}
+  .bmi-marker{position:absolute;top:-4px;width:4px;height:20px;background:var(--ink);border-radius:2px;transform:translateX(-50%);box-shadow:0 0 0 2px var(--surface)}
+  .bmi-scale{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:9.5px;color:var(--faint)}
+  .msvg{width:100%;height:96px;display:block;margin-top:10px}
+  .tpl-row{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:10px;margin-bottom:4px}
+  .tpl-row::-webkit-scrollbar{display:none}
+  .tpl{flex:none;appearance:none;border:1px solid var(--line-strong);background:var(--surface-2);color:var(--ink);
+    font-family:var(--font-body);font-weight:600;font-size:12px;padding:7px 12px;border-radius:999px;cursor:pointer;white-space:nowrap}
+  .plan-list{display:flex;flex-direction:column;gap:6px}
+  .plan-row{display:flex;align-items:center;gap:10px;padding:2px 0}
+  .plan-row.today .plan-day{color:var(--accent-ink)}
+  .plan-day{font-family:var(--font-mono);font-weight:600;font-size:12px;width:34px;flex:none;color:var(--muted)}
+  .plan-type{flex:1;appearance:none;text-align:left;border:1px solid var(--line);background:var(--surface);
+    font-family:var(--font-body);font-weight:600;font-size:14px;padding:9px 12px;border-radius:10px;cursor:pointer}
+  .plan-done{flex:none;width:26px;height:26px;border-radius:8px;border:2px solid var(--line-strong);background:var(--surface);cursor:pointer;position:relative}
+  .plan-done.on{background:var(--accent);border-color:var(--accent)}
+  .plan-done.on::after{content:"";position:absolute;left:7px;top:3px;width:6px;height:11px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(42deg)}
+  .plan-done.ph{border-color:transparent;background:none;cursor:default}
+  .cal-top{display:flex;align-items:center;gap:16px}
+  .cal-ring{width:96px;height:96px;flex:none}
+  .cal-info{flex:1}
+  .cal-line{font-size:15px;font-family:var(--font-body)} .cal-line b{font-family:var(--font-mono);font-size:20px}
+  .macros{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .macros span{font-family:var(--font-mono);font-size:11px;color:var(--muted);background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:4px 9px}
+  .ssp{display:flex;align-items:center;gap:14px;margin:16px 0;padding:12px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px}
+  .ssp-plate{width:76px;height:76px;flex:none;border-radius:50%;border:3px solid var(--surface)}
+  .ssp-txt b{font-family:var(--font-display);font-size:14px} .ssp-sub{font-size:12.5px;color:var(--muted);margin-top:4px;line-height:1.45}
+  .water{display:flex;align-items:center;gap:12px;margin:6px 0 2px}
+  .water-l{font-size:14px;font-weight:500;flex:1}
+  .water-n{font-family:var(--font-mono);font-size:13px;font-weight:600;min-width:78px;text-align:center}
+  .wbtn{appearance:none;width:36px;height:36px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface-2);color:var(--ink);font-size:18px;cursor:pointer}
+  .flog{display:flex;flex-direction:column;gap:2px;margin-top:12px}
+  .flog-row{display:flex;align-items:center;gap:8px;font-size:13.5px;padding:7px 2px;border-bottom:1px solid var(--line)}
+  .flog-row span:first-child{flex:1}
+  .flog-k{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+  .flog-del{background:none;border:none;color:var(--faint);font-size:14px;cursor:pointer;width:24px}
+  .foodlist{display:flex;flex-direction:column;gap:4px;max-height:260px;overflow-y:auto}
+  .fooditem{display:flex;align-items:center;justify-content:space-between;gap:8px;appearance:none;
+    border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:9px 12px;cursor:pointer;
+    font-family:var(--font-body);font-size:13.5px;color:var(--ink);text-align:left}
+  .fooditem:active{transform:scale(.99)}
+  .fooditem .fk{font-family:var(--font-mono);font-size:12px;color:var(--accent-ink);font-weight:600}
+  .seg2{display:flex;gap:6px;flex-wrap:wrap}
+  .seg2 button{flex:1;min-width:60px;border:1px solid var(--line-strong);background:var(--surface-2);color:var(--ink);
+    font-family:var(--font-body);font-weight:600;font-size:13px;padding:9px 6px;border-radius:10px;cursor:pointer}
+  .seg2 button.sel{border-color:var(--accent);background:var(--accent-wash);color:var(--accent-ink)}
+
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -443,7 +510,7 @@
   <div class="tabs" role="tablist" id="tabs">
     <button class="tab" role="tab" aria-selected="true" data-tab="habit">✅ Habit</button>
     <button class="tab" role="tab" aria-selected="false" data-tab="work">🧰 Work Task<span class="tabbadge" id="workBadge" hidden></span></button>
-    <button class="tab" role="tab" disabled>💪 Fitness <span class="soon">soon</span></button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="fitness">💪 Fitness</button>
     <button class="tab" role="tab" disabled>💰 Finance <span class="soon">soon</span></button>
     <button class="tab" role="tab" disabled>🍎 Diet <span class="soon">soon</span></button>
     <button class="tab" role="tab" disabled>😴 Sleep <span class="soon">soon</span></button>
@@ -538,7 +605,14 @@
     <div class="selbar" id="selBar" hidden></div>
   </div><!-- /panel-work -->
 
-  <div class="foot" id="foot">Multi Tracker · v16</div>
+  <div id="panel-fitness" hidden>
+    <div class="fcard" id="fBmi"></div>
+    <div class="fcard" id="fWeight"></div>
+    <div class="fcard" id="fPlan"></div>
+    <div class="fcard" id="fNutri"></div>
+  </div><!-- /panel-fitness -->
+
+  <div class="foot" id="foot">Multi Tracker · v17</div>
 </div>
 
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
@@ -779,8 +853,9 @@
     [].forEach.call(tabs,function(t){ if(t.dataset.tab) t.setAttribute("aria-selected", t.dataset.tab===name?"true":"false"); });
     document.getElementById("panel-habit").hidden = name!=="habit";
     document.getElementById("panel-work").hidden = name!=="work";
+    document.getElementById("panel-fitness").hidden = name!=="fitness";
     try{localStorage.setItem(TABKEY,name);}catch(e){}
-    if(name==="work") renderWork(); else setTimeout(scrollToToday,30);
+    if(name==="work") renderWork(); else if(name==="fitness") renderFitness(); else setTimeout(scrollToToday,30);
   }
   document.getElementById("tabs").addEventListener("click",function(e){
     var t=e.target.closest(".tab"); if(!t||t.disabled||!t.dataset.tab)return; switchTab(t.dataset.tab);
@@ -905,6 +980,144 @@
       icon:"./icon-192.png", badge:"./icon-192.png"
     });
   }
+  /* ---------- fitness ---------- */
+  var EX={rest:{l:"Rehat",e:"😴",c:"var(--faint)"},push:{l:"Push",e:"💪",c:"#CF5546"},pull:{l:"Pull",e:"🏋️",c:"#2F6FB0"},
+    leg:{l:"Leg",e:"🦵",c:"#8A5CD1"},upper:{l:"Upper",e:"🙆",c:"#C7891A"},lower:{l:"Lower",e:"🧎",c:"#B0662F"},
+    full:{l:"Full Body",e:"🔥",c:"#17915A"},cardio:{l:"Cardio",e:"🏃",c:"#E08A3C"},core:{l:"Core",e:"🧘",c:"#2E9E9E"}};
+  var EX_ORDER=["push","pull","leg","upper","lower","full","cardio","core","rest"];
+  var DAYS=[["mon","Isn"],["tue","Sel"],["wed","Rab"],["thu","Kha"],["fri","Jum"],["sat","Sab"],["sun","Ahd"]];
+  var TEMPLATES={
+    "Full Body 3×":{mon:"full",tue:"rest",wed:"full",thu:"rest",fri:"full",sat:"rest",sun:"rest"},
+    "PPL 6×":{mon:"push",tue:"pull",wed:"leg",thu:"push",fri:"pull",sat:"leg",sun:"rest"},
+    "Upper/Lower 4×":{mon:"upper",tue:"lower",wed:"rest",thu:"upper",fri:"lower",sat:"rest",sun:"rest"},
+    "Cardio + Kekuatan":{mon:"full",tue:"cardio",wed:"full",thu:"cardio",fri:"full",sat:"cardio",sun:"rest"}};
+  var MYFOODS=[["Nasi lemak (biasa)",400],["Nasi lemak ayam",650],["Roti canai kosong",300],["Roti telur",390],
+    ["Nasi ayam sepinggan",600],["Nasi goreng kampung",640],["Mee goreng mamak",660],["Char kuey teow",745],
+    ["Laksa asam",400],["Mee rebus",450],["Roti john",500],["Nasi kandar campur",700],["Nasi dagang",500],
+    ["Capati",150],["Thosai",170],["Ayam percik",250],["Ikan bakar",200],["Sup ayam sayur",180],
+    ["Sayur campur",80],["Buah semangkuk",90],["Teh tarik",130],["Kopi O kosong",5],["Milo ais",200],["Air kosong",0]];
+  function fit(){ if(!state.fitness)state.fitness={};
+    var f=state.fitness; if(!f.profile)f.profile={sex:"male",activity:"moderate",goal:"maintain"};
+    if(!f.weights)f.weights=[]; if(!f.plan)f.plan={mon:"rest",tue:"rest",wed:"rest",thu:"rest",fri:"rest",sat:"rest",sun:"rest"};
+    if(!f.planDone)f.planDone={}; if(!f.food)f.food={}; if(!f.water)f.water={}; return f; }
+  function curWeight(){ var w=fit().weights; return w.length?w[w.length-1].kg:null; }
+  function upsertWeight(kg){ var f=fit(),td=todayStr(),e=f.weights.filter(function(x){return x.date===td;})[0];
+    if(e)e.kg=kg; else f.weights.push({date:td,kg:kg}); f.weights.sort(function(a,b){return a.date<b.date?-1:1;}); }
+  function bmiVal(){ var h=fit().profile.height,w=curWeight(); if(!h||!w)return null; var m=h/100; return w/(m*m); }
+  function bmiCat(v){ if(v<18.5)return{t:"Kurang berat",c:"var(--today)"}; if(v<23)return{t:"Normal",c:"var(--accent)"};
+    if(v<27.5)return{t:"Berlebihan berat",c:"var(--m2)"}; return{t:"Obes",c:"var(--m1)"}; }
+  function bmr(){ var p=fit().profile,w=curWeight(); if(!w||!p.height||!p.age)return null; var b=10*w+6.25*p.height-5*p.age; return p.sex==="female"?b-161:b+5; }
+  function tdee(){ var b=bmr(); if(!b)return null; var af={sedentary:1.2,light:1.375,moderate:1.55,active:1.725,veryactive:1.9}[fit().profile.activity]||1.55; return b*af; }
+  function calTarget(){ var t=tdee(); if(!t)return null; var g=fit().profile.goal; return Math.round(t+(g==="lose"?-500:g==="gain"?400:0)); }
+  function goalLabel(g){ return g==="lose"?"turun":g==="gain"?"naik":"kekal"; }
+  function weekDates(){ var now=new Date(),day=(now.getDay()+6)%7,mon=new Date(now); mon.setDate(now.getDate()-day);
+    var a=[]; for(var i=0;i<7;i++){var d=new Date(mon); d.setDate(mon.getDate()+i); a.push(d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()));} return a; }
+
+  function renderFitness(){ fit(); renderBMI(); renderWeightCard(); renderPlan(); renderNutri(); }
+  function renderBMI(){
+    var p=fit().profile,v=bmiVal(),w=curWeight(),t=tdee(),ct=calTarget(),el=document.getElementById("fBmi");
+    var top=v?('<div class="bmi-top"><div class="bmi-num" style="color:'+bmiCat(v).c+'">'+v.toFixed(1)+'</div>'+
+      '<div><span class="pillc" style="background:'+bmiCat(v).c+'">'+bmiCat(v).t+'</span><div class="bmi-sub">'+(w?w+" kg":"")+(p.height?" · "+p.height+" cm":"")+'</div></div></div>'+
+      '<div class="bmi-gauge"><div class="bmi-marker" style="left:'+Math.max(0,Math.min(100,(v-15)/20*100))+'%"></div></div>'+
+      '<div class="bmi-scale"><span>15</span><span>18.5</span><span>23</span><span>27.5</span><span>35</span></div>')
+      :'<div class="f-empty">Tekan <b>Kemaskini</b> untuk isi tinggi, berat & umur — dapatkan BMI (cutoff Asia) & anggaran kalori harian.</div>';
+    var stats=t?('<div class="fstat-row"><div class="fstat"><div class="k">Kalori harian (TDEE)</div><div class="v">'+Math.round(t)+'</div><div class="u">kcal maintenance</div></div>'+
+      '<div class="fstat"><div class="k">Sasaran ('+goalLabel(p.goal)+')</div><div class="v">'+ct+'</div><div class="u">kcal / hari</div></div></div>'):'';
+    el.innerHTML='<div class="fc-h"><h2>BMI & Badan</h2><button class="chip" data-act="editProfile">✎ Kemaskini</button></div>'+top+stats;
+  }
+  function renderWeightCard(){
+    var f=fit(),ws=f.weights,cur=curWeight(),tgt=f.profile.target,el=document.getElementById("fWeight");
+    var start=ws.length?ws[0].kg:null,chg=(cur!=null&&start!=null)?cur-start:null;
+    var chart=ws.length>=2?weightChart(ws):'';
+    var body=ws.length?('<div class="fstat-row"><div class="fstat"><div class="k">Sekarang</div><div class="v">'+cur+'</div><div class="u">kg</div></div>'+
+      (chg!=null?'<div class="fstat"><div class="k">Perubahan</div><div class="v" style="color:'+(chg<=0?"var(--accent-ink)":"var(--m1)")+'">'+(chg>0?"+":"")+(Math.round(chg*10)/10)+'</div><div class="u">kg dari mula</div></div>':'')+
+      (tgt?'<div class="fstat"><div class="k">Sasaran</div><div class="v">'+tgt+'</div><div class="u">kg</div></div>':'')+'</div>'+chart)
+      :'<div class="f-empty">Belum ada rekod. Tekan <b>＋ Log berat</b> untuk mula jejak.</div>';
+    el.innerHTML='<div class="fc-h"><h2>Jejak Berat</h2><button class="chip accent" data-act="logWeight">＋ Log berat</button></div>'+body;
+  }
+  function weightChart(ws){
+    var W=320,H=90,pl=8,pr=8,pt=10,pb=14,iw=W-pl-pr,ih=H-pt-pb,kgs=ws.map(function(e){return e.kg;});
+    var mn=Math.min.apply(null,kgs),mx=Math.max.apply(null,kgs); if(mx-mn<2)mx=mn+2; var e2=(mx-mn)*0.12; mn-=e2; mx+=e2;
+    var n=ws.length,xf=function(i){return pl+(n<=1?iw/2:i/(n-1)*iw);},yf=function(v){return pt+(1-(v-mn)/(mx-mn))*ih;};
+    var d="",dots=""; ws.forEach(function(e,i){var X=xf(i),Y=yf(e.kg); d+=(i?"L":"M")+X.toFixed(1)+" "+Y.toFixed(1)+" "; dots+='<circle cx="'+X.toFixed(1)+'" cy="'+Y.toFixed(1)+'" r="2.4" fill="var(--accent)"/>';});
+    var tgt=fit().profile.target,tl=""; if(tgt&&tgt>mn&&tgt<mx){var ty=yf(tgt); tl='<line x1="'+pl+'" y1="'+ty.toFixed(1)+'" x2="'+(W-pr)+'" y2="'+ty.toFixed(1)+'" stroke="var(--m2)" stroke-width="1" stroke-dasharray="4 3"/>';}
+    return '<svg class="msvg" viewBox="0 0 '+W+' '+H+'">'+tl+'<path d="'+d+'" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'+dots+'</svg>';
+  }
+  function renderPlan(){
+    var f=fit(),el=document.getElementById("fPlan"),wk=weekDates(),done=0,planned=0;
+    var rows=DAYS.map(function(dd,i){var type=f.plan[dd[0]]||"rest",ex=EX[type],ds=wk[i],dn=!!f.planDone[ds],isT=ds===todayStr();
+      if(type!=="rest"){planned++; if(dn)done++;}
+      return '<div class="plan-row'+(isT?" today":"")+'"><span class="plan-day">'+dd[1]+'</span>'+
+        '<button class="plan-type" data-act="planCycle" data-day="'+dd[0]+'" style="color:'+ex.c+'">'+ex.e+' '+ex.l+'</button>'+
+        (type!=="rest"?'<button class="plan-done'+(dn?" on":"")+'" data-act="planDone" data-date="'+ds+'" aria-label="Siap"></button>':'<span class="plan-done ph"></span>')+'</div>';
+    }).join("");
+    el.innerHTML='<div class="fc-h"><h2>Pelan Senaman</h2><span class="chip" style="pointer-events:none;background:var(--surface-2)">'+done+'/'+planned+' minggu ni</span></div>'+
+      '<div class="tpl-row">'+Object.keys(TEMPLATES).map(function(nm){return '<button class="tpl" data-act="template" data-tpl="'+esc(nm)+'">'+esc(nm)+'</button>';}).join("")+'</div>'+
+      '<div class="plan-list">'+rows+'</div>';
+  }
+  function renderNutri(){
+    var f=fit(),el=document.getElementById("fNutri"),ct=calTarget(),td=todayStr(),log=f.food[td]||[];
+    var total=log.reduce(function(s,x){return s+x.k;},0),w=curWeight(),glasses=f.water[td]||0;
+    var prot=w?Math.round(1.8*w):null,fatg=ct?Math.round(ct*0.25/9):null,carbg=(ct&&prot&&fatg)?Math.max(0,Math.round((ct-prot*4-fatg*9)/4)):null;
+    var calBlk=ct?('<div class="cal-top"><div class="cal-ring">'+calRing(total,ct)+'</div><div class="cal-info">'+
+      '<div class="cal-line"><b>'+total+'</b> / '+ct+' kcal hari ni</div>'+
+      (prot?'<div class="macros"><span>Protein '+prot+'g</span><span>Karbo '+carbg+'g</span><span>Lemak '+fatg+'g</span></div>':'')+'</div></div>')
+      :'<div class="f-empty">Isi profil di kad BMI dulu untuk dapatkan sasaran kalori & makro.</div>';
+    el.innerHTML='<div class="fc-h"><h2>Pemakanan 🇲🇾</h2></div>'+calBlk+
+      '<div class="ssp"><div class="ssp-plate" style="background:conic-gradient(var(--accent) 0 50%,var(--m2) 50% 75%,var(--m1) 75% 100%)"></div>'+
+        '<div class="ssp-txt"><b>Suku Suku Separuh</b><div class="ssp-sub">Panduan pinggan sihat MOH: ¼ karbohidrat, ¼ protein/ikan/ayam, ½ sayur & buah.</div></div></div>'+
+      '<div class="water"><span class="water-l">💧 Air hari ni</span><button class="wbtn" data-act="water" data-d="-1">−</button><span class="water-n">'+glasses+' / 8 gelas</span><button class="wbtn" data-act="water" data-d="1">＋</button></div>'+
+      (log.length?'<div class="flog">'+log.map(function(x,i){return '<div class="flog-row"><span>'+esc(x.n)+'</span><span class="flog-k">'+x.k+' kcal</span><button class="flog-del" data-act="delFood" data-i="'+i+'">✕</button></div>';}).join("")+'</div>':'')+
+      '<div class="fc-sub">Tambah makanan hari ni</div><div class="foodlist">'+
+      MYFOODS.map(function(fd){return '<button class="fooditem" data-act="addFood" data-n="'+esc(fd[0])+'" data-k="'+fd[1]+'"><span>'+esc(fd[0])+'</span><span class="fk">'+fd[1]+' kcal</span></button>';}).join("")+'</div>';
+  }
+  function calRing(total,target){
+    var pct=target?Math.min(100,total/target*100):0,over=total>target,r=40,c=2*Math.PI*r,off=c*(1-pct/100),col=over?"var(--m1)":"var(--accent)";
+    return '<svg viewBox="0 0 100 100" style="width:96px;height:96px"><circle cx="50" cy="50" r="'+r+'" fill="none" stroke="var(--line)" stroke-width="10"/>'+
+      '<circle cx="50" cy="50" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="10" stroke-linecap="round" stroke-dasharray="'+c+'" stroke-dashoffset="'+off+'" transform="rotate(-90 50 50)"/>'+
+      '<text x="50" y="47" text-anchor="middle" font-size="17" font-weight="600" fill="var(--ink)">'+Math.round(over?total/target*100:pct)+'%</text>'+
+      '<text x="50" y="62" text-anchor="middle" font-size="9" fill="var(--muted)">kcal</text></svg>';
+  }
+  function openProfile(){
+    var p=fit().profile,w=curWeight(),sex=p.sex||"male",goal=p.goal||"maintain";
+    showSheet('<h3>Kemaskini profil</h3>'+
+      '<div class="field"><label>Tinggi (cm)</label><input id="pfH" type="number" inputmode="decimal" value="'+(p.height||"")+'"></div>'+
+      '<div class="field"><label>Berat sekarang (kg)</label><input id="pfW" type="number" inputmode="decimal" value="'+(w||"")+'"></div>'+
+      '<div class="field"><label>Umur</label><input id="pfA" type="number" inputmode="numeric" value="'+(p.age||"")+'"></div>'+
+      '<div class="field"><label>Jantina</label><div class="seg2" id="pfSex"><button data-v="male" class="'+(sex!=="female"?"sel":"")+'">Lelaki</button><button data-v="female" class="'+(sex==="female"?"sel":"")+'">Perempuan</button></div></div>'+
+      '<div class="field"><label>Tahap aktiviti</label><select id="pfAct">'+
+        [["sedentary","Sedentari (jarang senam)"],["light","Ringan (1–2×/mgg)"],["moderate","Sederhana (3–4×/mgg)"],["active","Aktif (5–6×/mgg)"],["veryactive","Sangat aktif (atlet)"]].map(function(o){return '<option value="'+o[0]+'"'+(p.activity===o[0]?" selected":"")+'>'+o[1]+'</option>';}).join("")+'</select></div>'+
+      '<div class="field"><label>Matlamat</label><div class="seg2" id="pfGoal"><button data-v="lose" class="'+(goal==="lose"?"sel":"")+'">Turun</button><button data-v="maintain" class="'+(goal==="maintain"?"sel":"")+'">Kekal</button><button data-v="gain" class="'+(goal==="gain"?"sel":"")+'">Naik</button></div></div>'+
+      '<div class="field"><label>Berat sasaran (kg)</label><input id="pfT" type="number" inputmode="decimal" value="'+(p.target||"")+'"></div>'+
+      '<div class="actions"><button class="btn" id="pfCancel">Cancel</button><button class="btn primary" id="pfSave">Simpan</button></div>');
+    document.getElementById("pfSex").addEventListener("click",function(e){var b=e.target.closest("[data-v]");if(!b)return;sex=b.dataset.v;[].forEach.call(this.children,function(c){c.classList.remove("sel");});b.classList.add("sel");});
+    document.getElementById("pfGoal").addEventListener("click",function(e){var b=e.target.closest("[data-v]");if(!b)return;goal=b.dataset.v;[].forEach.call(this.children,function(c){c.classList.remove("sel");});b.classList.add("sel");});
+    document.getElementById("pfCancel").onclick=closeSheet;
+    document.getElementById("pfSave").onclick=function(){var f=fit(),P=f.profile;
+      P.height=parseFloat(document.getElementById("pfH").value)||null; P.age=parseInt(document.getElementById("pfA").value)||null;
+      P.sex=sex; P.activity=document.getElementById("pfAct").value; P.goal=goal; P.target=parseFloat(document.getElementById("pfT").value)||null;
+      var wv=parseFloat(document.getElementById("pfW").value); if(wv)upsertWeight(Math.round(wv*10)/10);
+      save(); closeSheet(); renderFitness();};
+  }
+  function openLogWeight(){
+    showSheet('<h3>Log berat hari ni</h3><div class="field"><label>Berat (kg)</label><input id="lwVal" type="number" inputmode="decimal" step="0.1" value="'+(curWeight()||"")+'" placeholder="cth 70.5"></div>'+
+      '<div class="actions"><button class="btn" id="lwCancel">Cancel</button><button class="btn primary" id="lwSave">Simpan</button></div>');
+    document.getElementById("lwCancel").onclick=closeSheet;
+    document.getElementById("lwSave").onclick=function(){var v=parseFloat(document.getElementById("lwVal").value); if(v){upsertWeight(Math.round(v*10)/10);save();closeSheet();renderFitness();}};
+    setTimeout(function(){var f=document.getElementById("lwVal");if(f)f.focus();},50);
+  }
+  document.getElementById("panel-fitness").addEventListener("click",function(e){
+    var el=e.target.closest("[data-act]"); if(!el)return; var a=el.dataset.act,f=fit(),td=todayStr();
+    if(a==="editProfile")return openProfile();
+    if(a==="logWeight")return openLogWeight();
+    if(a==="planCycle"){var d=el.dataset.day,i=EX_ORDER.indexOf(f.plan[d]||"rest"); f.plan[d]=EX_ORDER[(i+1)%EX_ORDER.length]; save(); renderPlan(); return;}
+    if(a==="planDone"){var dt=el.dataset.date; if(f.planDone[dt])delete f.planDone[dt]; else f.planDone[dt]=true; save(); renderPlan(); return;}
+    if(a==="template"){var t=TEMPLATES[el.dataset.tpl]; if(t){f.plan=Object.assign({},t); save(); renderPlan();} return;}
+    if(a==="water"){f.water[td]=Math.max(0,(f.water[td]||0)+(+el.dataset.d)); save(); renderNutri(); return;}
+    if(a==="addFood"){(f.food[td]=f.food[td]||[]).push({n:el.dataset.n,k:+el.dataset.k}); save(); renderNutri(); return;}
+    if(a==="delFood"){var ix=+el.dataset.i; if(f.food[td])f.food[td].splice(ix,1); save(); renderNutri(); return;}
+  });
+
   /* ---------- export: professional report artwork (PNG) ---------- */
   function openReport(){
     showSheet('<h3>Work Task Report</h3><div id="rpWrap" style="min-height:120px;display:grid;place-items:center;color:var(--muted);font-size:14px">Menjana artwork…</div>'+
@@ -1308,7 +1521,7 @@
       '<button class="menu-item" id="miImport"><span class="mi">⬆️</span>Import backup</button>'+
       '<button class="menu-item" id="miReset"><span class="mi">♻️</span>Reset this month</button>'+
       '<div class="actions"><button class="btn" id="miClose">Close</button></div>'+
-      '<div class="ver">v16 · sign in (☁️) to sync across devices</div>'
+      '<div class="ver">v17 · sign in (☁️) to sync across devices</div>'
     );
     document.getElementById("miClose").onclick=closeSheet;
     document.getElementById("miExport").onclick=function(){
@@ -1374,6 +1587,7 @@
   function reRender(){ renderAll(); if(!document.getElementById("panel-work").hidden) renderWork(); updateReminderBadge(); }
   function adoptRemote(data){
     if(data.habits)state.habits=data.habits; state.months=data.months||{}; state.tasks=data.tasks||[];
+    if(data.fitness)state.fitness=data.fitness;
     state.updated=data.updated||Date.now();
     try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){} reRender();
   }
@@ -1395,6 +1609,7 @@
           else if(lm[sec][id]==null){ lm[sec][id]=rs[id]; }
         }); });
     });
+    if(!state.fitness&&remote.fitness)state.fitness=remote.fitness;
     state.updated=Date.now(); try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}
   }
 
@@ -1457,7 +1672,7 @@
   renderAll();
   updateCloudUI();
   var lastTab=null; try{lastTab=localStorage.getItem(TABKEY);}catch(e){}
-  if(lastTab==="work") switchTab("work"); else setTimeout(scrollToToday,60);
+  if(lastTab==="work"||lastTab==="fitness") switchTab(lastTab); else setTimeout(scrollToToday,60);
   updateReminderBadge();
   if(getAuth()) pullState();
   setTimeout(maybeNotify,800);
