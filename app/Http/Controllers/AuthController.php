@@ -128,6 +128,6 @@ class AuthController extends Controller
 
     private function userData(User $user): array
     {
-        return ['name' => $user->name, 'email' => $user->email];
+        return ['name' => $user->name, 'email' => $user->email, 'is_admin' => (bool) $user->is_admin];
     }
 }

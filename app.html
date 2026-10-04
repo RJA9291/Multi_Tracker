@@ -350,6 +350,13 @@
   .acct-em{font-family:var(--font-mono);font-weight:600;font-size:14px;word-break:break-all}
   .acct-sub{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.4}
   .btn.warn{color:var(--m1);border-color:var(--m1);background:transparent}
+  .btn.sm{flex:none;width:auto;height:auto;padding:8px 13px;font-size:13px;border-radius:9px}
+  .adm-list{display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto;margin-bottom:6px}
+  .adm-row{display:flex;align-items:center;gap:10px;justify-content:space-between;
+    background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:9px 12px}
+  .adm-em{font-family:var(--font-mono);font-size:12.5px;word-break:break-all;flex:1}
+  .adm-badge{font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:.06em;
+    background:var(--accent-wash);color:var(--accent-ink);padding:2px 6px;border-radius:999px;margin-left:4px}
 
   /* ---- due-date reminders ---- */
   .tabbadge{display:inline-grid;place-items:center;min-width:17px;height:17px;padding:0 4px;margin-left:6px;
@@ -593,7 +600,7 @@
     <div class="fcard" id="fNutri"></div>
   </div><!-- /panel-fitness -->
 
-  <div class="foot" id="foot">Multi Tracker · v19</div>
+  <div class="foot" id="foot">Multi Tracker · v20</div>
 </div>
 
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
@@ -1502,7 +1509,7 @@
       '<button class="menu-item" id="miImport"><span class="mi">⬆️</span>Import backup</button>'+
       '<button class="menu-item" id="miReset"><span class="mi">♻️</span>Reset this month</button>'+
       '<div class="actions"><button class="btn" id="miClose">Close</button></div>'+
-      '<div class="ver">v19 · sign in (☁️) to sync across devices</div>'
+      '<div class="ver">v20 · sign in (☁️) to sync across devices</div>'
     );
     document.getElementById("miClose").onclick=closeSheet;
     document.getElementById("miExport").onclick=function(){
@@ -1608,13 +1615,42 @@
         '<div class="acct"><div class="acct-em">✅ '+esc(a.user.email)+'</div>'+
         '<div class="acct-sub">Data kau (habit + task) sync ke server bila kau ubah, dan turun automatik ke peranti lain yang login akaun ni.</div></div>'+
         '<div class="actions"><button class="btn" id="acSync">Sync now</button><button class="btn" id="acPass">Tukar password</button></div>'+
+        ((a.user&&a.user.is_admin)?'<div class="actions"><button class="btn primary" id="acAdmin">👑 Admin — Reset password</button></div>':'')+
         '<div class="actions"><button class="btn warn" id="acOut">Sign out</button><button class="btn" id="acClose">Close</button></div>');
       document.getElementById("acSync").onclick=function(){ pullState().then(pushState); };
       document.getElementById("acPass").onclick=openChangePassword;
+      if(a.user&&a.user.is_admin)document.getElementById("acAdmin").onclick=openAdmin;
       document.getElementById("acOut").onclick=function(){ clearAuth(); updateCloudUI(); closeSheet(); };
       document.getElementById("acClose").onclick=closeSheet;
     } else { renderAuthForm("login",""); }
   }
+  function openAdmin(){
+    showSheet('<h3>👑 Admin — Reset password</h3>'+
+      '<div class="acct-sub" style="margin-bottom:10px">Tekan "Hantar reset" untuk hantar emel reset password ke pengguna.</div>'+
+      '<div id="admList" class="adm-list">Memuatkan…</div>'+
+      '<div class="actions"><button class="btn" id="admClose">Kembali</button><button class="btn warn" id="admAll">Reset SEMUA</button></div>');
+    document.getElementById("admClose").onclick=openAccount;
+    document.getElementById("admAll").onclick=function(){
+      if(!confirm("Hantar emel reset kepada SEMUA pengguna berdaftar?"))return;
+      var b=document.getElementById("admAll"); b.disabled=true; b.textContent="…";
+      api("/admin/reset-all","POST",{}).then(function(r){ alert("Emel reset dihantar kepada "+r.sent+" pengguna."); b.disabled=false; b.textContent="Reset SEMUA"; })
+        .catch(function(e){ alert(admMsg(e)); b.disabled=false; b.textContent="Reset SEMUA"; });
+    };
+    api("/admin/users","GET").then(function(r){
+      var el=document.getElementById("admList");
+      el.innerHTML=(r.users&&r.users.length)?r.users.map(function(u){
+        return '<div class="adm-row"><div class="adm-em">'+esc(u.email)+(u.is_admin?' <span class="adm-badge">admin</span>':'')+'</div>'+
+          '<button class="btn sm" data-reset="'+u.id+'">Hantar reset</button></div>';
+      }).join(""):'<div class="f-empty">Tiada pengguna berdaftar lagi.</div>';
+      el.addEventListener("click",function(e){
+        var b=e.target.closest("[data-reset]"); if(!b||b.disabled)return;
+        b.disabled=true; b.textContent="…";
+        api("/admin/users/"+b.dataset.reset+"/reset","POST",{}).then(function(){ b.textContent="✓ Dihantar"; })
+          .catch(function(err){ b.textContent="Gagal"; b.disabled=false; alert(admMsg(err)); });
+      });
+    }).catch(function(e){ document.getElementById("admList").innerHTML='<div class="auth-err">'+esc(admMsg(e))+'</div>'; });
+  }
+  function admMsg(e){ if(!e||!e.status)return "Tak dapat sambung ke server."; if(e.status===403)return "Akaun kau bukan admin."; return (e.data&&e.data.message)||"Gagal. Cuba lagi."; }
   function openChangePassword(err){
     showSheet('<h3>Tukar password</h3>'+
       '<div class="field"><label>Password semasa</label><input id="cpCur" type="password" autocomplete="current-password"></div>'+
