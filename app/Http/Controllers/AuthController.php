@@ -56,6 +56,27 @@ class AuthController extends Controller
         return response()->json(['ok' => true]);
     }
 
+    public function changePassword(Request $request)
+    {
+        $data = $request->validate([
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:6|max:120',
+        ]);
+
+        $user = $request->user();
+
+        if (! Hash::check($data['current_password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['Password semasa salah.'],
+            ]);
+        }
+
+        $user->password = Hash::make($data['password']);
+        $user->save();
+
+        return response()->json(['ok' => true]);
+    }
+
     private function authPayload(User $user): array
     {
         return [

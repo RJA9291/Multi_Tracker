@@ -592,7 +592,7 @@
     <div class="fcard" id="fNutri"></div>
   </div><!-- /panel-fitness -->
 
-  <div class="foot" id="foot">Multi Tracker · v17</div>
+  <div class="foot" id="foot">Multi Tracker · v18</div>
 </div>
 
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
@@ -1501,7 +1501,7 @@
       '<button class="menu-item" id="miImport"><span class="mi">⬆️</span>Import backup</button>'+
       '<button class="menu-item" id="miReset"><span class="mi">♻️</span>Reset this month</button>'+
       '<div class="actions"><button class="btn" id="miClose">Close</button></div>'+
-      '<div class="ver">v17 · sign in (☁️) to sync across devices</div>'
+      '<div class="ver">v18 · sign in (☁️) to sync across devices</div>'
     );
     document.getElementById("miClose").onclick=closeSheet;
     document.getElementById("miExport").onclick=function(){
@@ -1606,12 +1606,35 @@
       showSheet('<h3>Cloud sync</h3>'+
         '<div class="acct"><div class="acct-em">✅ '+esc(a.user.email)+'</div>'+
         '<div class="acct-sub">Data kau (habit + task) sync ke server bila kau ubah, dan turun automatik ke peranti lain yang login akaun ni.</div></div>'+
-        '<div class="actions"><button class="btn" id="acSync">Sync now</button><button class="btn warn" id="acOut">Sign out</button></div>'+
-        '<div class="actions"><button class="btn" id="acClose">Close</button></div>');
+        '<div class="actions"><button class="btn" id="acSync">Sync now</button><button class="btn" id="acPass">Tukar password</button></div>'+
+        '<div class="actions"><button class="btn warn" id="acOut">Sign out</button><button class="btn" id="acClose">Close</button></div>');
       document.getElementById("acSync").onclick=function(){ pullState().then(pushState); };
+      document.getElementById("acPass").onclick=openChangePassword;
       document.getElementById("acOut").onclick=function(){ clearAuth(); updateCloudUI(); closeSheet(); };
       document.getElementById("acClose").onclick=closeSheet;
     } else { renderAuthForm("login",""); }
+  }
+  function openChangePassword(err){
+    showSheet('<h3>Tukar password</h3>'+
+      '<div class="field"><label>Password semasa</label><input id="cpCur" type="password" autocomplete="current-password"></div>'+
+      '<div class="field"><label>Password baru</label><input id="cpNew" type="password" autocomplete="new-password" placeholder="min 6 aksara"></div>'+
+      (err?'<div class="auth-err">'+esc(err)+'</div>':'')+
+      '<div class="actions"><button class="btn" id="cpCancel">Cancel</button><button class="btn primary" id="cpSave">Simpan</button></div>');
+    document.getElementById("cpCancel").onclick=openAccount;
+    document.getElementById("cpSave").onclick=function(){
+      var cur=document.getElementById("cpCur").value||"", nw=document.getElementById("cpNew").value||"";
+      if(!cur||!nw){ return openChangePassword("Isi kedua-dua ruang."); }
+      if(nw.length<6){ return openChangePassword("Password baru sekurang-kurangnya 6 aksara."); }
+      var btn=document.getElementById("cpSave"); btn.disabled=true; btn.textContent="…";
+      api("/password","POST",{current_password:cur,password:nw}).then(function(){
+        closeSheet(); alert("Password berjaya ditukar.");
+      }).catch(function(e){
+        var msg=e&&e.data&&e.data.errors?Object.keys(e.data.errors).map(function(k){return e.data.errors[k][0];}).join(" "):(e&&e.message)||"Gagal tukar password.";
+        if(!e||!e.status)msg="Tak dapat sambung ke server.";
+        openChangePassword(msg);
+      });
+    };
+    setTimeout(function(){var f=document.getElementById("cpCur");if(f)f.focus();},50);
   }
 
   function renderAuthForm(mode,err){
