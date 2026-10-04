@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -73,6 +74,46 @@ class AuthController extends Controller
 
         $user->password = Hash::make($data['password']);
         $user->save();
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        $data = $request->validate(['email' => 'required|email']);
+
+        // Fire the reset link; never reveal whether the email exists.
+        Password::sendResetLink(['email' => strtolower($data['email'])]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $data = $request->validate([
+            'token' => 'required|string',
+            'email' => 'required|email',
+            'password' => 'required|string|min:6|max:120',
+        ]);
+
+        $status = Password::reset(
+            [
+                'email' => strtolower($data['email']),
+                'password' => $data['password'],
+                'password_confirmation' => $data['password'],
+                'token' => $data['token'],
+            ],
+            function (User $user, string $password) {
+                $user->password = Hash::make($password);
+                $user->save();
+            }
+        );
+
+        if ($status !== Password::PASSWORD_RESET) {
+            throw ValidationException::withMessages([
+                'email' => ['Link reset tidak sah atau telah luput. Minta link baharu.'],
+            ]);
+        }
 
         return response()->json(['ok' => true]);
     }

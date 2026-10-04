@@ -345,6 +345,7 @@
 
   /* ---- account / sync ---- */
   .auth-err{color:var(--m1);font-size:13px;margin:-2px 0 10px;font-weight:500}
+  .linkbtn{background:none;border:none;color:var(--accent-ink);font-family:var(--font-body);font-size:12.5px;font-weight:600;cursor:pointer;padding:0;text-decoration:underline}
   .acct{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:13px 14px;margin-bottom:6px}
   .acct-em{font-family:var(--font-mono);font-weight:600;font-size:14px;word-break:break-all}
   .acct-sub{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.4}
@@ -592,7 +593,7 @@
     <div class="fcard" id="fNutri"></div>
   </div><!-- /panel-fitness -->
 
-  <div class="foot" id="foot">Multi Tracker · v18</div>
+  <div class="foot" id="foot">Multi Tracker · v19</div>
 </div>
 
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
@@ -1501,7 +1502,7 @@
       '<button class="menu-item" id="miImport"><span class="mi">⬆️</span>Import backup</button>'+
       '<button class="menu-item" id="miReset"><span class="mi">♻️</span>Reset this month</button>'+
       '<div class="actions"><button class="btn" id="miClose">Close</button></div>'+
-      '<div class="ver">v18 · sign in (☁️) to sync across devices</div>'
+      '<div class="ver">v19 · sign in (☁️) to sync across devices</div>'
     );
     document.getElementById("miClose").onclick=closeSheet;
     document.getElementById("miExport").onclick=function(){
@@ -1637,6 +1638,45 @@
     setTimeout(function(){var f=document.getElementById("cpCur");if(f)f.focus();},50);
   }
 
+  function openForgot(prefill){
+    showSheet('<h3>Lupa password</h3>'+
+      '<div class="field"><label>Email akaun</label><input id="fgEmail" type="email" inputmode="email" value="'+esc(prefill||"")+'" placeholder="you@email.com"></div>'+
+      '<div class="acct-sub" style="margin:-4px 0 12px">Kami hantar link reset ke email ni. Link sah 60 minit — semak Spam/Promotions juga.</div>'+
+      '<div class="actions"><button class="btn" id="fgCancel">Kembali</button><button class="btn primary" id="fgSend">Hantar link</button></div>');
+    document.getElementById("fgCancel").onclick=function(){ renderAuthForm("login",""); };
+    document.getElementById("fgSend").onclick=function(){
+      var em=(document.getElementById("fgEmail").value||"").trim().toLowerCase();
+      if(!em){ return openForgot(em); }
+      var b=document.getElementById("fgSend"); b.disabled=true; b.textContent="…";
+      api("/forgot-password","POST",{email:em}).then(function(){
+        showSheet('<h3>Link dihantar ✅</h3><div class="acct" style="line-height:1.5">Kalau <b>'+esc(em)+'</b> berdaftar, link reset dah dihantar ke email tu. Buka email, klik link, set password baru.<div class="acct-sub" style="margin-top:8px">Semak folder Spam/Promotions juga.</div></div><div class="actions"><button class="btn primary" id="fgDone">OK</button></div>');
+        document.getElementById("fgDone").onclick=closeSheet;
+      }).catch(function(e){ openForgot(em); alert((e&&!e.status)?"Tak dapat sambung ke server.":"Gagal hantar. Cuba lagi."); });
+    };
+    setTimeout(function(){var f=document.getElementById("fgEmail");if(f&&!prefill)f.focus();},50);
+  }
+  function clearResetUrl(){ try{ if(window.history&&history.replaceState) history.replaceState(null,"",location.pathname); }catch(e){} }
+  function openResetForm(email,token,err){
+    showSheet('<h3>Set password baru</h3>'+
+      '<div class="acct" style="margin-bottom:12px"><div class="acct-em">'+esc(email)+'</div></div>'+
+      '<div class="field"><label>Password baru</label><input id="rsPass" type="password" autocomplete="new-password" placeholder="min 6 aksara"></div>'+
+      (err?'<div class="auth-err">'+esc(err)+'</div>':'')+
+      '<div class="actions"><button class="btn" id="rsCancel">Batal</button><button class="btn primary" id="rsSave">Tetapkan</button></div>');
+    document.getElementById("rsCancel").onclick=function(){ clearResetUrl(); closeSheet(); };
+    document.getElementById("rsSave").onclick=function(){
+      var pw=document.getElementById("rsPass").value||"";
+      if(pw.length<6){ return openResetForm(email,token,"Password sekurang-kurangnya 6 aksara."); }
+      var b=document.getElementById("rsSave"); b.disabled=true; b.textContent="…";
+      api("/reset-password","POST",{email:email,token:token,password:pw}).then(function(){
+        clearResetUrl(); closeSheet(); alert("Password baru ditetapkan. Sila sign in."); renderAuthForm("login","");
+      }).catch(function(e){
+        var msg=e&&e.data&&e.data.errors?Object.keys(e.data.errors).map(function(k){return e.data.errors[k][0];}).join(" "):(e&&e.message)||"Gagal reset.";
+        if(!e||!e.status)msg="Tak dapat sambung ke server.";
+        openResetForm(email,token,msg);
+      });
+    };
+    setTimeout(function(){var f=document.getElementById("rsPass");if(f)f.focus();},50);
+  }
   function renderAuthForm(mode,err){
     var login=mode==="login";
     showSheet('<h3>'+(login?"Sign in":"Create account")+'</h3>'+
@@ -1644,10 +1684,12 @@
       (login?"":'<div class="field"><label>Name (optional)</label><input id="auName" type="text" maxlength="60" placeholder="Nama kau"></div>')+
       '<div class="field"><label>Email</label><input id="auEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@email.com"></div>'+
       '<div class="field"><label>Password</label><input id="auPass" type="password" autocomplete="'+(login?"current-password":"new-password")+'" placeholder="min 6 aksara"></div>'+
+      (login?'<div style="text-align:right;margin:-8px 0 10px"><button class="linkbtn" id="auForgot" type="button">Lupa password?</button></div>':'')+
       (err?'<div class="auth-err">'+esc(err)+'</div>':'')+
       '<div class="actions"><button class="btn" id="auCancel">Cancel</button><button class="btn primary" id="auGo">'+(login?"Sign in":"Sign up")+'</button></div>'+
       '<div class="ver">Data disimpan atas server kau (Forge) &middot; sync merentas peranti.</div>');
     document.getElementById("authTabs").addEventListener("click",function(e){var b=e.target.closest("[data-m]");if(!b)return;renderAuthForm(b.dataset.m,"");});
+    var fgl=document.getElementById("auForgot"); if(fgl)fgl.onclick=function(){ openForgot((document.getElementById("auEmail").value||"").trim().toLowerCase()); };
     document.getElementById("auCancel").onclick=closeSheet;
     document.getElementById("auGo").onclick=function(){
       var email=(document.getElementById("auEmail").value||"").trim().toLowerCase();
@@ -1679,6 +1721,9 @@
   updateReminderBadge();
   if(getAuth()) pullState();
   setTimeout(maybeNotify,800);
+  // Password-reset link landed here (?reset=token&email=...) → show set-new-password form.
+  try{ var _rp=new URLSearchParams(location.search), _tk=_rp.get("reset"), _em=_rp.get("email");
+    if(_tk&&_em){ setTimeout(function(){ openResetForm(_em,_tk); },350); } }catch(e){}
   document.addEventListener("visibilitychange",function(){
     if(document.visibilityState==="visible"){ if(getAuth()&&!syncing)pullState(); updateReminderBadge(); maybeNotify(); }
   });

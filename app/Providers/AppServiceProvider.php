@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -28,6 +29,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        //
+        // Password-reset emails link back into the PWA (?reset=token&email=...),
+        // which shows the "set new password" form. Relies on APP_URL being correct.
+        ResetPassword::createUrlUsing(function ($user, string $token) {
+            return rtrim(config('app.url'), '/').'/?reset='.$token.'&email='.urlencode($user->getEmailForPasswordReset());
+        });
     }
 }
