@@ -604,7 +604,7 @@
     <div class="fcard" id="fNutri"></div>
   </div><!-- /panel-fitness -->
 
-  <div class="foot" id="foot">Multi Tracker · v21</div>
+  <div class="foot" id="foot">Multi Tracker · v22</div>
 </div>
 
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
@@ -1513,7 +1513,7 @@
       '<button class="menu-item" id="miImport"><span class="mi">⬆️</span>Import backup</button>'+
       '<button class="menu-item" id="miReset"><span class="mi">♻️</span>Reset this month</button>'+
       '<div class="actions"><button class="btn" id="miClose">Close</button></div>'+
-      '<div class="ver">v21 · sign in (☁️) to sync across devices</div>'
+      '<div class="ver">v22 · sign in (☁️) to sync across devices</div>'
     );
     document.getElementById("miClose").onclick=closeSheet;
     document.getElementById("miExport").onclick=function(){
@@ -1650,7 +1650,8 @@
         var badge=u.is_admin?' <span class="adm-badge">admin</span>':(u.approved?'':' <span class="adm-badge pend">menunggu</span>');
         var actions=u.is_admin?'':(
           (u.approved?'':'<button class="btn sm primary" data-approve="'+u.id+'">Luluskan</button>')+
-          '<button class="btn sm" data-reset="'+u.id+'">Reset</button>'+
+          '<button class="btn sm" data-setpass="'+u.id+'">Set pass</button>'+
+          '<button class="btn sm" data-reset="'+u.id+'">Reset emel</button>'+
           '<button class="btn sm warn" data-del="'+u.id+'">Padam</button>'
         );
         return '<div class="adm-row"><div class="adm-em">'+esc(u.email)+badge+'</div>'+
@@ -1662,6 +1663,15 @@
         if(ap&&!ap.disabled){ ap.disabled=true; ap.textContent="…";
           api("/admin/users/"+ap.dataset.approve+"/approve","POST",{}).then(function(){ loadAdminUsers(); })
             .catch(function(err){ ap.textContent="Gagal"; ap.disabled=false; alert(admMsg(err)); });
+          return; }
+        var sp=e.target.closest("[data-setpass]");
+        if(sp&&!sp.disabled){
+          var np=prompt("Password baru untuk user ini (min 6 aksara):");
+          if(np===null)return;
+          if((np||"").length<6){ alert("Password sekurang-kurangnya 6 aksara."); return; }
+          sp.disabled=true; sp.textContent="…";
+          api("/admin/users/"+sp.dataset.setpass+"/password","POST",{password:np}).then(function(){ sp.textContent="✓ Set"; sp.disabled=false; })
+            .catch(function(err){ sp.textContent="Set pass"; sp.disabled=false; alert(admMsg(err)); });
           return; }
         var del=e.target.closest("[data-del]");
         if(del&&!del.disabled){ if(!confirm("Padam akaun ini? Data pengguna akan hilang."))return;

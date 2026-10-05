@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 
 class AdminController extends Controller
@@ -30,6 +31,23 @@ class AdminController extends Controller
         abort_unless($user, 404);
 
         $user->approved = true;
+        $user->save();
+
+        return response()->json(['ok' => true, 'email' => $user->email]);
+    }
+
+    public function setPassword(Request $request, int $id)
+    {
+        $this->guard($request);
+
+        $data = $request->validate([
+            'password' => 'required|string|min:6|max:120',
+        ]);
+
+        $user = User::find($id);
+        abort_unless($user, 404);
+
+        $user->password = Hash::make($data['password']);
         $user->save();
 
         return response()->json(['ok' => true, 'email' => $user->email]);
