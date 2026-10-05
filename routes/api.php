@@ -19,5 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/admin/users', [AdminController::class, 'users']);
     Route::post('/admin/users/{id}/reset', [AdminController::class, 'reset']);
+    Route::post('/admin/users/{id}/approve', [AdminController::class, 'approve']);
+    Route::delete('/admin/users/{id}', [AdminController::class, 'remove']);
     Route::post('/admin/reset-all', [AdminController::class, 'resetAll']);
 });

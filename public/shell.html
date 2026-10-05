@@ -377,6 +377,10 @@
   .adm-em{font-family:var(--font-mono);font-size:12.5px;word-break:break-all;flex:1}
   .adm-badge{font-family:var(--font-mono);font-size:9px;text-transform:uppercase;letter-spacing:.06em;
     background:var(--accent-wash);color:var(--accent-ink);padding:2px 6px;border-radius:999px;margin-left:4px}
+  .adm-badge.pend{background:rgba(214,158,46,.16);color:var(--m2)}
+  .adm-acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .adm-note{font-size:12px;color:var(--m2);margin-bottom:4px}
+  .btn.sm.warn{color:var(--m1)}
 
   /* ---- due-date reminders ---- */
   .tabbadge{display:inline-grid;place-items:center;min-width:17px;height:17px;padding:0 4px;margin-left:6px;
@@ -620,7 +624,7 @@
     <div class="fcard" id="fNutri"></div>
   </div><!-- /panel-fitness -->
 
-  <div class="foot" id="foot">Multi Tracker · v20</div>
+  <div class="foot" id="foot">Multi Tracker · v21</div>
 </div>
 
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
@@ -1529,7 +1533,7 @@
       '<button class="menu-item" id="miImport"><span class="mi">⬆️</span>Import backup</button>'+
       '<button class="menu-item" id="miReset"><span class="mi">♻️</span>Reset this month</button>'+
       '<div class="actions"><button class="btn" id="miClose">Close</button></div>'+
-      '<div class="ver">v20 · sign in (☁️) to sync across devices</div>'
+      '<div class="ver">v21 · sign in (☁️) to sync across devices</div>'
     );
     document.getElementById("miClose").onclick=closeSheet;
     document.getElementById("miExport").onclick=function(){
@@ -1645,8 +1649,8 @@
     } else { renderAuthForm("login",""); }
   }
   function openAdmin(){
-    showSheet('<h3>👑 Admin — Reset password</h3>'+
-      '<div class="acct-sub" style="margin-bottom:10px">Tekan "Hantar reset" untuk hantar emel reset password ke pengguna.</div>'+
+    showSheet('<h3>👑 Admin — Pengguna</h3>'+
+      '<div class="acct-sub" style="margin-bottom:10px">Luluskan pendaftaran baru, hantar emel reset password, atau padam akaun.</div>'+
       '<div id="admList" class="adm-list">Memuatkan…</div>'+
       '<div class="actions"><button class="btn" id="admClose">Kembali</button><button class="btn warn" id="admAll">Reset SEMUA</button></div>');
     document.getElementById("admClose").onclick=openAccount;
@@ -1656,19 +1660,42 @@
       api("/admin/reset-all","POST",{}).then(function(r){ alert("Emel reset dihantar kepada "+r.sent+" pengguna."); b.disabled=false; b.textContent="Reset SEMUA"; })
         .catch(function(e){ alert(admMsg(e)); b.disabled=false; b.textContent="Reset SEMUA"; });
     };
+    loadAdminUsers();
+  }
+  function loadAdminUsers(){
     api("/admin/users","GET").then(function(r){
-      var el=document.getElementById("admList");
-      el.innerHTML=(r.users&&r.users.length)?r.users.map(function(u){
-        return '<div class="adm-row"><div class="adm-em">'+esc(u.email)+(u.is_admin?' <span class="adm-badge">admin</span>':'')+'</div>'+
-          '<button class="btn sm" data-reset="'+u.id+'">Hantar reset</button></div>';
+      var el=document.getElementById("admList"); if(!el)return;
+      var pending=(r.users||[]).filter(function(u){return !u.approved && !u.is_admin;});
+      var rows=(r.users&&r.users.length)?r.users.map(function(u){
+        var badge=u.is_admin?' <span class="adm-badge">admin</span>':(u.approved?'':' <span class="adm-badge pend">menunggu</span>');
+        var actions=u.is_admin?'':(
+          (u.approved?'':'<button class="btn sm primary" data-approve="'+u.id+'">Luluskan</button>')+
+          '<button class="btn sm" data-reset="'+u.id+'">Reset</button>'+
+          '<button class="btn sm warn" data-del="'+u.id+'">Padam</button>'
+        );
+        return '<div class="adm-row"><div class="adm-em">'+esc(u.email)+badge+'</div>'+
+          '<div class="adm-acts">'+actions+'</div></div>';
       }).join(""):'<div class="f-empty">Tiada pengguna berdaftar lagi.</div>';
-      el.addEventListener("click",function(e){
-        var b=e.target.closest("[data-reset]"); if(!b||b.disabled)return;
-        b.disabled=true; b.textContent="…";
-        api("/admin/users/"+b.dataset.reset+"/reset","POST",{}).then(function(){ b.textContent="✓ Dihantar"; })
-          .catch(function(err){ b.textContent="Gagal"; b.disabled=false; alert(admMsg(err)); });
-      });
-    }).catch(function(e){ document.getElementById("admList").innerHTML='<div class="auth-err">'+esc(admMsg(e))+'</div>'; });
+      el.innerHTML=(pending.length?'<div class="adm-note">'+pending.length+' pendaftaran menunggu kelulusan.</div>':'')+rows;
+      el.onclick=function(e){
+        var ap=e.target.closest("[data-approve]");
+        if(ap&&!ap.disabled){ ap.disabled=true; ap.textContent="…";
+          api("/admin/users/"+ap.dataset.approve+"/approve","POST",{}).then(function(){ loadAdminUsers(); })
+            .catch(function(err){ ap.textContent="Gagal"; ap.disabled=false; alert(admMsg(err)); });
+          return; }
+        var del=e.target.closest("[data-del]");
+        if(del&&!del.disabled){ if(!confirm("Padam akaun ini? Data pengguna akan hilang."))return;
+          del.disabled=true; del.textContent="…";
+          api("/admin/users/"+del.dataset.del,"DELETE",{}).then(function(){ loadAdminUsers(); })
+            .catch(function(err){ del.textContent="Gagal"; del.disabled=false; alert(admMsg(err)); });
+          return; }
+        var b=e.target.closest("[data-reset]");
+        if(b&&!b.disabled){ b.disabled=true; b.textContent="…";
+          api("/admin/users/"+b.dataset.reset+"/reset","POST",{}).then(function(){ b.textContent="✓ Dihantar"; })
+            .catch(function(err){ b.textContent="Gagal"; b.disabled=false; alert(admMsg(err)); });
+        }
+      };
+    }).catch(function(e){ var el=document.getElementById("admList"); if(el)el.innerHTML='<div class="auth-err">'+esc(admMsg(e))+'</div>'; });
   }
   function admMsg(e){ if(!e||!e.status)return "Tak dapat sambung ke server."; if(e.status===403)return "Akaun kau bukan admin."; return (e.data&&e.data.message)||"Gagal. Cuba lagi."; }
   function openChangePassword(err){
@@ -1756,6 +1783,7 @@
       var go=document.getElementById("auGo"); go.disabled=true; go.textContent="…";
       var body=login?{email:email,password:pass}:{email:email,password:pass,name:name};
       api(login?"/login":"/register","POST",body).then(function(res){
+        if(res&&res.pending){ alert(res.message||"Akaun berjaya dicipta. Tunggu kelulusan admin sebelum boleh log masuk."); renderAuthForm("login",""); return; }
         setAuth({token:res.token,user:res.user}); closeSheet(); updateCloudUI(); firstSync();
       }).catch(function(e){
         var msg;

@@ -18,13 +18,18 @@ class AuthController extends Controller
             'password' => 'required|string|min:6|max:120',
         ]);
 
-        $user = User::create([
+        User::create([
             'name' => $data['name'] ?? explode('@', $data['email'])[0],
             'email' => strtolower($data['email']),
             'password' => Hash::make($data['password']),
+            'approved' => false,
         ]);
 
-        return response()->json($this->authPayload($user), 201);
+        // New accounts need admin approval before they can sign in.
+        return response()->json([
+            'pending' => true,
+            'message' => 'Akaun berjaya dicipta. Tunggu kelulusan admin sebelum boleh log masuk.',
+        ], 201);
     }
 
     public function login(Request $request)
@@ -39,6 +44,12 @@ class AuthController extends Controller
         if (! $user || ! Hash::check($data['password'], $user->password)) {
             throw ValidationException::withMessages([
                 'email' => ['Email atau password salah.'],
+            ]);
+        }
+
+        if (! $user->approved && ! $user->is_admin) {
+            throw ValidationException::withMessages([
+                'email' => ['Akaun anda belum diluluskan oleh admin.'],
             ]);
         }
 
@@ -128,6 +139,6 @@ class AuthController extends Controller
 
     private function userData(User $user): array
     {
-        return ['name' => $user->name, 'email' => $user->email, 'is_admin' => (bool) $user->is_admin];
+        return ['name' => $user->name, 'email' => $user->email, 'is_admin' => (bool) $user->is_admin, 'approved' => (bool) $user->approved];
     }
 }

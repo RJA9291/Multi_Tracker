@@ -18,8 +18,37 @@ class AdminController extends Controller
         $this->guard($request);
 
         return response()->json([
-            'users' => User::orderBy('created_at')->get(['id', 'name', 'email', 'is_admin', 'created_at']),
+            'users' => User::orderBy('created_at')->get(['id', 'name', 'email', 'is_admin', 'approved', 'created_at']),
         ]);
+    }
+
+    public function approve(Request $request, int $id)
+    {
+        $this->guard($request);
+
+        $user = User::find($id);
+        abort_unless($user, 404);
+
+        $user->approved = true;
+        $user->save();
+
+        return response()->json(['ok' => true, 'email' => $user->email]);
+    }
+
+    public function remove(Request $request, int $id)
+    {
+        $this->guard($request);
+
+        $user = User::find($id);
+        abort_unless($user, 404);
+
+        if ($user->id === $request->user()->id) {
+            abort(422, 'Tidak boleh padam akaun sendiri.');
+        }
+
+        $user->delete();
+
+        return response()->json(['ok' => true]);
     }
 
     public function reset(Request $request, int $id)
