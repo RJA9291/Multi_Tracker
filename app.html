@@ -604,7 +604,7 @@
     <div class="fcard" id="fNutri"></div>
   </div><!-- /panel-fitness -->
 
-  <div class="foot" id="foot">Multi Tracker · v22</div>
+  <div class="foot" id="foot">Multi Tracker · v23</div>
 </div>
 
 <div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
@@ -1147,20 +1147,37 @@
       var total=tasks.length, pct=total?Math.round(c.done/total*100):0;
       var P={bg:"#FFFFFF",panel:"#F5F6F3",ink:"#181A18",mut:"#6B6E69",faint:"#9DA097",line:"#E6E6E1",
         accent:"#17915A",accentSoft:"#E3F1EA",over:"#CF5546",amber:"#C7891A",hi:"#CF5546",med:"#E08A3C",low:"#7C8A82"};
-      var W=1080,pad=56,cW=W-pad*2,taskH=92,secHeadH=52,secGap=12,subLH=36,subStart=100,subPad=20;
+      var W=1080,pad=56,cW=W-pad*2,secHeadH=52,secGap=12,subLH=34,subPad=20,titleLH=33;
       var showSubs=flt.type!=="all";  // expand subtasks whenever a single project OR group is filtered
       function subsOf(t){return (showSubs&&t.subtasks&&t.subtasks.length)?t.subtasks:[];}
-      function cardH(t){var n=subsOf(t).length; return n?(subStart+(n-1)*subLH+subPad):80;}
+      var S=2, cv=document.createElement("canvas");
+      var x=cv.getContext("2d");
+      var DISP='"Bricolage Grotesque", system-ui, sans-serif', BODY='"IBM Plex Sans", system-ui, sans-serif', MONO='"IBM Plex Mono", ui-monospace, monospace';
+      var TFONT='600 27px '+BODY, SFONT='500 20px '+BODY;
+      // word-wrap to a max width; hard-breaks a single word that is itself too long (measureText is unaffected by canvas size/scale, so this is stable before and after the canvas is sized)
+      function wrapLines(text,maxW,font){x.font=font; text=String(text==null?"":text).trim();
+        if(!text)return [""]; var words=text.split(/\s+/), lines=[], cur="";
+        function emit(){ while(x.measureText(cur).width>maxW&&cur.length>1){var lo=1,hi=cur.length;
+          while(lo<hi){var mid=(lo+hi+1)>>1; if(x.measureText(cur.slice(0,mid)).width<=maxW)lo=mid; else hi=mid-1;}
+          lines.push(cur.slice(0,lo)); cur=cur.slice(lo);} }
+        words.forEach(function(w){ if(!cur){cur=w;} else if(x.measureText(cur+" "+w).width<=maxW){cur+=" "+w;} else {lines.push(cur); cur=w;} emit(); });
+        if(cur!=="")lines.push(cur); return lines.length?lines:[""]; }
+      function cardLayout(t){var RC=subsOf(t).length>0?140:0;
+        var tl=wrapLines(t.title,cW-44-RC,TFONT);
+        var pillsTop=34+(tl.length-1)*titleLH+14;
+        var subs=subsOf(t), sLines=subs.map(function(s){return wrapLines(s.text,cW-74-RC,SFONT);});
+        var base=pillsTop+30+26, subBase=[]; sLines.forEach(function(ls){subBase.push(base); base+=ls.length*subLH;});
+        var h=subs.length?(base-subLH+subPad):(pillsTop+38);
+        return {tl:tl,pillsTop:pillsTop,sLines:sLines,subBase:subBase,RC:RC,h:h};}
+      function cardH(t){return cardLayout(t).h;}
       function advance(t){return cardH(t)+12;}
       var statuses=STATUS.filter(function(st){return tasks.some(function(t){return t.status===st[0];});});
       var secSum=0; statuses.forEach(function(st){var sh=0; tasks.forEach(function(t){if(t.status===st[0])sh+=advance(t);}); secSum+=secHeadH+sh+secGap;});
       function taskPct(t){ if(t.subtasks&&t.subtasks.length){var d=t.subtasks.filter(function(s){return s.done;}).length; return Math.round(d/t.subtasks.length*100);} return t.status==="done"?100:t.status==="doing"?50:0; }
       var chart=flt.type==="group"&&total, rowH=42, chartHeadH=42, chartH=chart?(chartHeadH+total*rowH+8):0;
       var base=386+chartH; var yEnd=total?(base+secSum):(base+70); var H=Math.round(yEnd+72);
-      var S=2, cv=document.createElement("canvas"); cv.width=W*S; cv.height=H*S;
-      var x=cv.getContext("2d"); x.scale(S,S); x.textBaseline="alphabetic";
+      cv.width=W*S; cv.height=H*S; x.scale(S,S); x.textBaseline="alphabetic";
       x.fillStyle=P.bg; x.fillRect(0,0,W,H);
-      var DISP='"Bricolage Grotesque", system-ui, sans-serif', BODY='"IBM Plex Sans", system-ui, sans-serif', MONO='"IBM Plex Mono", ui-monospace, monospace';
       function rr(px,py,w,h,r){x.beginPath(); if(x.roundRect)x.roundRect(px,py,w,h,r); else {x.moveTo(px+r,py);x.arcTo(px+w,py,px+w,py+h,r);x.arcTo(px+w,py+h,px,py+h,r);x.arcTo(px,py+h,px,py,r);x.arcTo(px,py,px+w,py,r);x.closePath();}}
       function trunc(t,m){if(x.measureText(t).width<=m)return t;while(t.length>1&&x.measureText(t+"…").width>m)t=t.slice(0,-1);return t+"…";}
       function pill(px,py,text,bg,fg){x.font='600 19px '+MONO;var padx=12,h=30,w=x.measureText(text).width+padx*2;x.fillStyle=bg;rr(px,py,w,h,15);x.fill();x.fillStyle=fg;x.textBaseline="middle";x.fillText(text,px+padx,py+h/2+1);x.textBaseline="alphabetic";return w;}
@@ -1222,24 +1239,24 @@
         x.fillStyle=P.ink; x.font='600 24px '+DISP; var lbl=st[1].toUpperCase(); x.fillText(lbl,pad+22,y+21);
         x.fillStyle=P.faint; x.font='600 18px '+MONO; x.fillText(String(list.length),pad+22+x.measureText(lbl).width+14,y+20);
         y+=secHeadH;
-        list.forEach(function(t){var ch=cardH(t);
-          var hasSub=subsOf(t).length>0, RC=hasSub?140:0;
+        list.forEach(function(t){var L=cardLayout(t),ch=L.h;
+          var hasSub=subsOf(t).length>0, RC=L.RC;
           x.fillStyle=P.bg; rr(pad,y,cW,ch,16); x.fill(); x.strokeStyle=P.line; x.lineWidth=1; rr(pad,y,cW,ch,16); x.stroke();
           x.fillStyle=sc[st[0]]; rr(pad+1,y+10,5,ch-20,3); x.fill();
-          x.fillStyle=P.ink; x.font='600 27px '+BODY; x.fillText(trunc(t.title,cW-44-RC),pad+22,y+34);
-          var mx=pad+22,my=y+48;
+          x.fillStyle=P.ink; x.font=TFONT; L.tl.forEach(function(ln,i){x.fillText(ln,pad+22,y+34+i*titleLH);});
+          var mx=pad+22,my=y+L.pillsTop;
           if(t.priority){var pc=t.priority==="high"?P.hi:t.priority==="med"?P.med:P.low; mx+=pill(mx,my,PRIO[t.priority].t.toUpperCase(),hexA(pc,0.14),pc)+8;}
           if(t.due){var ov=t.status!=="done"&&t.due<td; mx+=pill(mx,my,fmtDue(t.due),ov?hexA(P.over,0.14):P.panel,ov?P.over:P.mut)+8;}
           if(t.project)mx+=pill(mx,my,"# "+t.project,P.accentSoft,P.accent)+8;
           if(!showSubs&&t.subtasks&&t.subtasks.length){var dn0=t.subtasks.filter(function(s){return s.done;}).length; mx+=pill(mx,my,dn0+"/"+t.subtasks.length+" sub",P.panel,P.mut)+8;}
           if(hasSub){var dn=t.subtasks.filter(function(s){return s.done;}).length, tot=t.subtasks.length;
             donut(pad+cW-66,y+ch/2,42,11,Math.round(dn/tot*100),dn+"/"+tot);}
-          subsOf(t).forEach(function(s,i){var ly=y+subStart+i*subLH,bx=pad+24,by=ly-14,bs=16;
+          subsOf(t).forEach(function(s,i){var ls=L.sLines[i],b0=y+L.subBase[i],bx=pad+24,by=b0-14,bs=16,stx=bx+26;
             if(s.done){x.fillStyle=P.accent; rr(bx,by,bs,bs,4); x.fill(); x.strokeStyle="#fff"; x.lineWidth=2; x.beginPath(); x.moveTo(bx+4,by+8); x.lineTo(bx+7,by+11); x.lineTo(bx+12,by+5); x.stroke();}
             else{x.strokeStyle=P.line; x.lineWidth=1.5; rr(bx,by,bs,bs,4); x.stroke();}
-            x.font='500 20px '+BODY; var stx=bx+26, txt=trunc(s.text,(cW-(stx-pad)-24)-RC);
-            x.fillStyle=s.done?P.faint:P.mut; x.fillText(txt,stx,ly);
-            if(s.done){var w=x.measureText(txt).width; x.strokeStyle=P.faint; x.lineWidth=1.3; x.beginPath(); x.moveTo(stx,ly-6); x.lineTo(stx+w,ly-6); x.stroke();}
+            x.font=SFONT; x.fillStyle=s.done?P.faint:P.mut;
+            ls.forEach(function(ln,k){var ly=b0+k*subLH; x.fillText(ln,stx,ly);
+              if(s.done){var w=x.measureText(ln).width; x.strokeStyle=P.faint; x.lineWidth=1.3; x.beginPath(); x.moveTo(stx,ly-6); x.lineTo(stx+w,ly-6); x.stroke();}});
           });
           y+=advance(t);});
         y+=secGap;
@@ -1513,7 +1530,7 @@
       '<button class="menu-item" id="miImport"><span class="mi">⬆️</span>Import backup</button>'+
       '<button class="menu-item" id="miReset"><span class="mi">♻️</span>Reset this month</button>'+
       '<div class="actions"><button class="btn" id="miClose">Close</button></div>'+
-      '<div class="ver">v22 · sign in (☁️) to sync across devices</div>'
+      '<div class="ver">v23 · sign in (☁️) to sync across devices</div>'
     );
     document.getElementById("miClose").onclick=closeSheet;
     document.getElementById("miExport").onclick=function(){
